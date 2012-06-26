@@ -39,7 +39,7 @@ class OSSocksServerThread implements Runnable {
 
         buf = ByteBuffer.allocate(bufferSize);
         try {
-            InetAddress addr = ((InetSocketAddress) client.getRemoteAddress()).getAddress();
+            InetAddress addr = ((InetSocketAddress) client.socket().getRemoteSocketAddress()).getAddress();
             if (!addr.isAnyLocalAddress() && !addr.isLoopbackAddress()) {
                 client.close();
                 return;
@@ -198,7 +198,7 @@ class OSSocksServerThread implements Runnable {
     private void createPipe(SocketChannel client, InetSocketAddress remoteHost) throws IOException {
         // Set up connection - This is where the hand-off to
         // OneSwarm will go
-        log.info("Creating bi-directional pipe between " + client.getRemoteAddress() + " and " + remoteHost.getHostString());
+        log.info("Creating bi-directional pipe between " + client.socket().getRemoteSocketAddress() + " and " + remoteHost.getHostString());
         remote = SocketChannel.open(remoteHost);
         new Thread(new TcpPipe(client, remote)).start();
         new Thread(new TcpPipe(remote, client)).start();
@@ -235,8 +235,8 @@ class OSSocksServerThread implements Runnable {
             int len = 0;
             try {
                 Thread.currentThread().setName(
-                        "Pipe from " + input.getRemoteAddress() + " to "
-                                + output.getRemoteAddress());
+                        "Pipe from " + input.socket().getRemoteSocketAddress() + " to "
+                                + output.socket().getRemoteSocketAddress());
                 try {
                     while (len >= 0) {
                         len = input.read(buf);

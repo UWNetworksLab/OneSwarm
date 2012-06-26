@@ -24,7 +24,7 @@ public class OSSocksServer implements Runnable {
     public void run() {
         try {
             serverSocket = ServerSocketChannel.open();
-            serverSocket.bind(new InetSocketAddress("localhost", localPort));
+            serverSocket.socket().bind(new InetSocketAddress("localhost", localPort));
             
             while (true) {
                 try {
