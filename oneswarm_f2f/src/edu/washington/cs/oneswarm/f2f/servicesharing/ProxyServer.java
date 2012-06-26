@@ -8,8 +8,7 @@ import java.net.UnknownHostException;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
-import net.sourceforge.jsocks.socks.InetRange;
-import net.sourceforge.jsocks.socks.server.IdentAuthenticator;
+import edu.washington.cs.oneswarm.f2f.socks.OSSocksServer;
 
 public class ProxyServer implements Runnable {
     public static Logger logger = Logger.getLogger(ProxyServer.class.getName());
@@ -20,7 +19,7 @@ public class ProxyServer implements Runnable {
      * @throws UnknownHostException
      */
     public static void main(String[] args) throws UnknownHostException, IOException {
-        Thread server = new Thread(new ProxyServer(12345));
+        Thread server = new Thread(new OSSocksServer(12345));
         server.setDaemon(true);
         server.start();
         Socket socket = new Socket("127.0.0.1", 12345);
@@ -29,7 +28,7 @@ public class ProxyServer implements Runnable {
 
         byte[] payload = ("fdilshfnmnoi2j0rfoisdnf wkqejh n2uirh . msdf sdlkfj sd l\n lkjdflksjd lksdjf h "
                 + "   0pi23 rwe09uqhjw9 aueoih2q039puwjgreuigfdjs ghskjh fdsgjkh092qugjesi"
-                + "lkgjhwo ero iuqwe0oiurewgi heror08 egrwiweib� h2qbriu wefiwb").getBytes();
+                + "lkgjhwo ero iuqwe0oiurewgi heror08 egrwiweib��� h2qbriu wefiwb").getBytes();
         byte[] returned = new byte[payload.length];
 
         out.write(payload);
@@ -56,14 +55,9 @@ public class ProxyServer implements Runnable {
 
     @Override
     public void run() {
-        IdentAuthenticator localAuth = new net.sourceforge.jsocks.socks.server.IdentAuthenticator();
-        InetRange hostRange = new net.sourceforge.jsocks.socks.InetRange();
-        hostRange.add("127.0.0.1");
-        localAuth.add(hostRange, null);
-        net.sourceforge.jsocks.socks.ProxyServer server = new net.sourceforge.jsocks.socks.ProxyServer(
-                localAuth);
+        OSSocksServer server = new OSSocksServer(port);
         started.release();
-        server.start(port);
+        server.run();
     }
 
     public Thread startDeamonThread(boolean blockUntilStarted) throws InterruptedException {
