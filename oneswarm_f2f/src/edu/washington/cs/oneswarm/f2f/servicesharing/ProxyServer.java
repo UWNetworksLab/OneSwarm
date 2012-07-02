@@ -1,72 +1,40 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
 import edu.washington.cs.oneswarm.f2f.socks.OSSocksServer;
+import edu.washington.cs.oneswarm.f2f.socks.SocksCommandHandler;
 
 public class ProxyServer implements Runnable {
     public static Logger logger = Logger.getLogger(ProxyServer.class.getName());
 
     /**
-     * @param args
-     * @throws IOException
-     * @throws UnknownHostException
+     * Starts a SOCKS 4, 4a and 5 compliant proxy server at localhost:1080
+     * For a test of the OSProxyServer see OneSwarm/javatests/edu.washington.cs.oneswarm.f2f.socks.SocksServerTest.java
      */
-    public static void main(String[] args) throws UnknownHostException, IOException {
-        Thread server = new Thread(new OSSocksServer(12345));
-        server.setDaemon(true);
-        server.start();
-        Socket socket = new Socket("127.0.0.1", 12345);
-        InputStream in = socket.getInputStream();
-        OutputStream out = socket.getOutputStream();
-
-        byte[] payload = ("fdilshfnmnoi2j0rfoisdnf wkqejh n2uirh . msdf sdlkfj sd l\n lkjdflksjd lksdjf h "
-                + "   0pi23 rwe09uqhjw9 aueoih2q039puwjgreuigfdjs ghskjh fdsgjkh092qugjesi"
-                + "lkgjhwo ero iuqwe0oiurewgi heror08 egrwiweib��� h2qbriu wefiwb").getBytes();
-        byte[] returned = new byte[payload.length];
-
-        out.write(payload);
-
-        int read = 0;
-        while (read < payload.length) {
-            read += in.read(returned, read, payload.length - read);
-            System.out.println("read: " + read);
-        }
+    public static void main(String[] args) throws UnknownHostException, IOException {        
+        new OSSocksServer(1080, new SocksCommandHandler.BidirectionalPipe()).run();
     }
 
     private final int port;
-    private final Semaphore started = new Semaphore(0);
 
     public ProxyServer(int port) {
         this.port = port;
     }
 
-    public int waitForStart() throws InterruptedException {
-        started.acquire();
-        started.release();
-        return port;
-    }
-
     @Override
     public void run() {
-        OSSocksServer server = new OSSocksServer(port);
-        started.release();
-        server.run();
+        new OSSocksServer(port, new SocksCommandHandler.BidirectionalPipe()).run();
     }
 
     public Thread startDeamonThread(boolean blockUntilStarted) throws InterruptedException {
-        Thread t = new Thread(this);
-        t.setName("Socks server");
+        Thread t = new Thread(new OSSocksServer(port, new SocksCommandHandler.BidirectionalPipe()));
         t.setDaemon(true);
         t.start();
-        if (blockUntilStarted) {
-            waitForStart();
+        if(blockUntilStarted){
+            Thread.sleep(50);
         }
         return t;
     }

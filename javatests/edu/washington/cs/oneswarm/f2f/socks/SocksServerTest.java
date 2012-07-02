@@ -1,5 +1,5 @@
 /**
- * Test to demonstrate that the OSSocksServer accepts and connects a client and server usuing the SOCKS5 protocol.
+ * Test to demonstrate that the OSSocksServer accepts and connects a client and server using the SOCKS5 protocol.
  */
 
 package edu.washington.cs.oneswarm.f2f.socks;
@@ -19,15 +19,20 @@ public class SocksServerTest {
 
     @Test
     public void test() {
-        Thread server = new Thread(new OSSocksServer(1080));
-        server.start();
+        new Thread(new OSSocksServer(1080, new SocksCommandHandler.BidirectionalPipe())).start();
+
+        // Wait for server to initialize
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e1) {
+        }
 
         Random rnd = new Random();
         byte[] message = new byte[50];
         rnd.nextBytes(message);
 
-        Thread socket = new Thread(new SocketThread(10001, message));
-        socket.start();
+        Thread server = new Thread(new SocketThread(10001, message));
+        server.start();
 
         ByteBuffer readBuf = ByteBuffer.allocate(1024);
 
@@ -61,16 +66,18 @@ public class SocksServerTest {
             assertEquals(SocksConstants.AddressType.DOMAIN_NAME, readBuf.get() & 0xff);
             assertEquals("localhost".length(), readBuf.get() & 0xff);
             readBuf.clear();
-            
+
             // Send message
             connection.write(ByteBuffer.wrap(message));
-            
+
             // Get reply (The string "PASS" encoded in ASCII)
             connection.read(readBuf);
             readBuf.flip();
             byte[] replyBytes = new byte[readBuf.remaining()];
             readBuf.get(replyBytes);
             assertEquals("PASS", new String(replyBytes));
+
+            connection.close();
 
         } catch (IOException e) {
             fail(e.toString());
@@ -87,6 +94,7 @@ public class SocksServerTest {
         }
 
         public void run() {
+            Thread.currentThread().setName("Test Server Thread");
             try {
                 // Set up a testing serverSocket to receive our proxied
                 // connection
@@ -104,13 +112,15 @@ public class SocksServerTest {
 
                 // Assert that the message is what we originally sent
                 assertArrayEquals(expectedMessage, actualMessage);
-                
+
                 // Reply with the text "PASS"
                 socket.write(ByteBuffer.wrap("PASS".getBytes()));
+
+                serverSocket.close();
+                socket.close();
             } catch (IOException e) {
                 fail(e.toString());
             }
-
         }
     }
 }

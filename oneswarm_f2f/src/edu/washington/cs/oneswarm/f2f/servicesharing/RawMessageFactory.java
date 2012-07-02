@@ -7,7 +7,7 @@ import com.aelitis.azureus.core.peermanager.messaging.MessageStreamFactory;
 import edu.washington.cs.oneswarm.f2f.servicesharing.DataMessage.RawMessageDecoder;
 import edu.washington.cs.oneswarm.f2f.servicesharing.DataMessage.RawMessageEncoder;
 
-class RawMessageFactory implements MessageStreamFactory {
+public class RawMessageFactory implements MessageStreamFactory {
     @Override
     public MessageStreamDecoder createDecoder() {
         return new RawMessageDecoder();
