@@ -23,8 +23,8 @@ public class SocksServerTest {
 
         // Wait for server to initialize
         try {
-            Thread.sleep(10);
-        } catch (InterruptedException e1) {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
         }
 
         Random rnd = new Random();
@@ -99,7 +99,7 @@ public class SocksServerTest {
                 // Set up a testing serverSocket to receive our proxied
                 // connection
                 ServerSocketChannel serverSocket = ServerSocketChannel.open();
-                serverSocket.bind(new InetSocketAddress("localhost", port));
+                serverSocket.socket().bind(new InetSocketAddress("localhost", port));
                 SocketChannel socket = serverSocket.accept();
                 assertTrue(socket != null);
 
