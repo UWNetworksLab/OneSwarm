@@ -9,6 +9,8 @@ import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.SocketChannel;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.aelitis.azureus.core.networkmanager.NetworkConnection;
 import com.aelitis.azureus.core.networkmanager.Transport;
 import com.aelitis.azureus.core.networkmanager.impl.NetworkConnectionImpl;
@@ -33,22 +35,24 @@ public class SocksCommandHandler {
         /**
          * The method should make the connection in the manner defined by the
          * implementing class, or throw a SocksException if that is not
-         * possible.
+         * possible. Returns a byte[(6|18)] indicating the IP address of the
+         * exitNode as seen by the remote destination followed by the port that is exposed.
          * 
          * @param command
          * @param client
          * @param remoteHost
+         * @return byte[] IP address of exitNode as seen by remote destination and port.
          * @throws SocksException
          *             Throws SocksException if the command is not supported by
          *             this handler or if the remoteHost is not allowed by the
-         *             ruleset
+         *             rule-set.
          */
-        void doCommand(byte command, SocketChannel client, String address, int port)
+        byte[] doCommand(byte command, SocketChannel client, String address, int port)
                 throws SocksException;
     }
 
     public static class HandoffToOneSwarm implements SocksCommandHandler.Interface {
-        public void doCommand(byte command, SocketChannel client, String address, int port)
+        public byte[] doCommand(byte command, SocketChannel client, String address, int port)
                 throws SocksException {
             switch (command) {
             case SocksConstants.Command.ESTABLISH_TCP_STREAM_CONNECTION:
@@ -69,10 +73,9 @@ public class SocksCommandHandler {
                 MessageStreamDecoder decoder = new RawMessageFactory().createDecoder();
 
                 // Prepend header in "OneSwarm Proxy Wire Format"
-                // ------------------------------------------------------------------
-                // | port high bits | port low | address length | address bytes
-                // |
-                // ------------------------------------------------------------------
+                // -----------------------------------------------------------
+                // | port high bits | port low | address length | address |
+                // -----------------------------------------------------------
                 ByteBuffer header = ByteBuffer.allocate(3 + address.length());
                 header.put((byte) (port & 0xff00 >> 8));
                 header.put((byte) (port & 0xff));
@@ -82,7 +85,7 @@ public class SocksCommandHandler {
 
                 NetworkConnection nc = new NetworkConnectionImpl(transport, encoder, decoder);
                 ServiceConnectionManager.getInstance().requestService(nc, server.getId());
-                break;
+                return ArrayUtils.addAll(server.getIpAddr(), new byte[]{0,0});
             default:
                 throw new SocksException(SocksConstants.Status.COMMAND_NOT_SUPPORTED);
             }
@@ -92,7 +95,7 @@ public class SocksCommandHandler {
     public static class BidirectionalPipe implements SocksCommandHandler.Interface {
         private static final int BUFFER_SIZE = 1024;
 
-        public void doCommand(byte command, SocketChannel client, String address, int port)
+        public byte[] doCommand(byte command, SocketChannel client, String address, int port)
                 throws SocksException {
 
             switch (command) {
@@ -108,14 +111,19 @@ public class SocksCommandHandler {
                         + client.socket().getRemoteSocketAddress() + " and "
                         + remoteHost.toString());
 
+                SocketChannel remote;
                 try {
-                    SocketChannel remote = SocketChannel.open(remoteHost);
+                    remote = SocketChannel.open(remoteHost);
                     new Thread(new TcpPipe(client, remote)).start();
                     new Thread(new TcpPipe(remote, client)).start();
                 } catch (IOException e) {
                     throw new SocksException(e);
                 }
-                break;
+                
+                byte[] exposedIp = remote.socket().getLocalAddress().getAddress();
+                int exposedPort = remote.socket().getLocalPort();
+                
+                return ArrayUtils.addAll(exposedIp, new byte[]{(byte)(exposedPort & 0xff00 >> 8), (byte)exposedPort});
             default:
                 throw new SocksException(SocksConstants.Status.COMMAND_NOT_SUPPORTED);
             }

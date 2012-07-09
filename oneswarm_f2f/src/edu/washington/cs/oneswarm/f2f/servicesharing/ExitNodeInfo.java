@@ -9,6 +9,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     // Publicly available info
     private String nickname;
     private long id;
+    private byte[] ipAddr;
     private int advertizedBandwidth;
     private PolicyTree exitPolicy;
     private Date onlineSince;
@@ -112,6 +113,18 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     }
 
     
+    public byte[] getIpAddr() {
+        return ipAddr;
+    }
+
+    public void setIpAddr(byte[] ipAddr) {
+        if(ipAddr.length == 4 || ipAddr.length == 16)
+            this.ipAddr = ipAddr;
+        else
+            throw new IllegalArgumentException();
+    }
+
+
     private static class PolicyTree {
         private PolicyNode root;
 

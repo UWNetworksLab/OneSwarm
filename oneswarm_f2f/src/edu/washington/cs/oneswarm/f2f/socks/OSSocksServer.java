@@ -10,7 +10,6 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class OSSocksServer implements Runnable {
@@ -115,49 +114,44 @@ public class OSSocksServer implements Runnable {
             byte command = buf.get();
             buf.get(); // Reserved Byte
             byte addressType = buf.get();
-            int length = 4;
+            
             int port = 0;
             String addr = "";
-
-            byte[] remoteID = new byte[0];
 
             try {
                 switch (addressType) {
                 case SocksConstants.AddressType.IPv4:
                 case SocksConstants.AddressType.IPv6:
-                    length *= addressType;
-                    remoteID = new byte[length + 3];
-                    remoteID[0] = addressType;
-                    readNBytes(buf, length + 2);
-                    buf.get(remoteID, 1, length + 2);
-                    port = (remoteID[remoteID.length - 2] & 0xff) << 8
-                            | (remoteID[remoteID.length - 1] & 0xff);
-                    addr = InetAddress.getByAddress(Arrays.copyOfRange(remoteID, 1, length + 1)).getHostAddress();
+                    int ipLen = 4 * addressType;
+                    readNBytes(buf, ipLen + 2);
+                    
+                    byte[] ipBytes = new byte[ipLen];
+                    buf.get(ipBytes); 
+                    addr = InetAddress.getByAddress(ipBytes).getHostAddress();
+                    
+                    port = buf.getShort() & 0xffff;
                     break;
 
                 case SocksConstants.AddressType.DOMAIN_NAME:
                     readNBytes(buf, 1);
-                    length = buf.get() & 0xff;
-                    remoteID = new byte[length + 4];
-                    remoteID[0] = addressType;
-                    remoteID[1] = (byte) length;
-                    readNBytes(buf, length + 2);
-                    buf.get(remoteID, 2, length + 2);
-                    port = (remoteID[remoteID.length - 2] & 0xff) << 8
-                            | (remoteID[remoteID.length - 1] & 0xff);
-                    addr = new String(Arrays.copyOfRange(remoteID, 2, length + 2));
+                    int addrLen = buf.get() & 0xff;
+                    readNBytes(buf, addrLen + 2);
+                    
+                    byte[] addrBytes = new byte[addrLen];
+                    buf.get(addrBytes);
+                    addr = new String(addrBytes);
+                    
+                    port = buf.getShort() & 0xffff;
                     break;
 
                 default:
                     throw new SocksException(SocksConstants.Status.ADDRESS_TYPE_NOT_SUPPORTED);
                 }
 
-                handler.doCommand(command, client, addr, port);
-
-                sendSocks5Message(SocksConstants.Status.REQUEST_GRANTED, remoteID);
+                sendSocks5Message(SocksConstants.Status.REQUEST_GRANTED, handler.doCommand(command, client, addr, port));
 
             } catch (SocksException e) {
-                sendSocks5Message((byte) e.getErrorCode(), remoteID);
+                sendSocks5Message((byte) e.getErrorCode(), new byte[]{0, 0, 0, 1, 0, 0});
             }
         }
 
@@ -168,8 +162,9 @@ public class OSSocksServer implements Runnable {
             try {
                 readNBytes(buf, 7);
                 byte command = buf.get();
-                port = (buf.get() & 0xff) << 8 | (buf.get() & 0xff);
-                addr = (buf.get() & 0xff) + "." + (buf.get() & 0xff) + "." + (buf.get() & 0xff) + "." + (buf.get() & 0xff);
+                port = buf.getShort() & 0xffff;
+                addr = (buf.get() & 0xff) + "." + (buf.get() & 0xff) + "." + (buf.get() & 0xff)
+                        + "." + (buf.get() & 0xff);
 
                 // Throw away user name string
                 byte character;
@@ -199,26 +194,16 @@ public class OSSocksServer implements Runnable {
             }
         }
 
-        private void sendSocks5Message(byte statusByte, byte[] remoteID) throws IOException {
-            // remoteID must be the bytes sent by the client to indicate the
-            // remote
-            // host and must be in the same format as origonally sent..
-            // This must be appended to all messages sent to the client after
-            // the
-            // initial connection request. ie. for a url-based request, the
-            // format
-            // would be [ address type (0x03) | address length | each |
-            // character |
-            // of | the | address | port (high bytes) | port (low bytes) ]
-            client.write(new ByteBuffer[] {
-                    ByteBuffer
-                            .wrap(new byte[] { SocksConstants.Version.SOCKS_5, statusByte, 0x00 }),
-                    ByteBuffer.wrap(remoteID) });
+        private void sendSocks5Message(byte statusByte, byte[] exitIpAndPort) throws IOException {
+            if(exitIpAndPort.length != 6 && exitIpAndPort.length != 18)
+                        throw new IllegalArgumentException();
+            
+            client.write(new ByteBuffer[] {ByteBuffer.wrap(new byte[] { SocksConstants.Version.SOCKS_5, statusByte, 0x00, (exitIpAndPort.length ==  6 ? SocksConstants.AddressType.IPv4 : SocksConstants.AddressType.IPv6)}),
+                    ByteBuffer.wrap(exitIpAndPort)});
         }
 
         private void sendSocks4Message(byte statusByte, int port, String address)
                 throws IOException {
-            
             // Translate SOCKS5 status bytes
             if (statusByte == SocksConstants.Status.REQUEST_GRANTED)
                 statusByte = 0x5a;
@@ -228,14 +213,16 @@ public class OSSocksServer implements Runnable {
             }
 
             byte[] ip;
-            try{
+            try {
                 ip = InetAddress.getByName(address).getAddress();
             } catch (Exception e) {
-                ip = new byte[]{0,0,0,1};
+                ip = new byte[] { 0, 0, 0, 1 };
             }
-            
-            client.write(new ByteBuffer[] { ByteBuffer.wrap(new byte[] { 0x00, statusByte }),
-                    ByteBuffer.wrap(new byte[] { (byte) (port & 0xff00 >> 8), (byte) (port & 0xff) }),
+
+            client.write(new ByteBuffer[] {
+                    ByteBuffer.wrap(new byte[] { 0x00, statusByte }),
+                    ByteBuffer
+                            .wrap(new byte[] { (byte) (port & 0xff00 >> 8), (byte) (port & 0xff) }),
                     ByteBuffer.wrap(ip) });
         }
 
