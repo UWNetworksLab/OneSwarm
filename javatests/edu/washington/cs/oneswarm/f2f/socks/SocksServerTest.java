@@ -63,8 +63,6 @@ public class SocksServerTest {
             assertEquals(SocksConstants.Version.SOCKS_5, readBuf.get() & 0xff);
             assertEquals(SocksConstants.Status.REQUEST_GRANTED, readBuf.get() & 0xff);
             assertEquals(0x00, readBuf.get() & 0xff);
-            assertEquals(SocksConstants.AddressType.DOMAIN_NAME, readBuf.get() & 0xff);
-            assertEquals("localhost".length(), readBuf.get() & 0xff);
             readBuf.clear();
 
             // Send message
