@@ -11,6 +11,8 @@ import java.util.Map;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DoubleClickEvent;
+import com.google.gwt.event.dom.client.DoubleClickHandler;
 import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOutHandler;
 import com.google.gwt.event.dom.client.MouseOverEvent;
@@ -555,7 +557,6 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
 
         private ClickHandler clickListener = new ClickHandler() {
             public void onClick(ClickEvent event) {
-
                 if (!isSelected && friendInfoLite.getStatus() == FriendInfoLite.STATUS_ONLINE) {
                     FriendPanel.this.addStyleName(OneSwarmCss.SidebarWidget.SELECTED_ITEM);
                     if (mSelectedFriend != null) {
@@ -566,10 +567,14 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
                     
                     mSelectedFriend = FriendPanel.this;
                     OneSwarmGWT.log("selected friend conn id: " + friendInfoLite.getConnectionId());
-                } else if ((System.currentTimeMillis() - lastClick) < SwarmsBrowser.DOUBLE_CLICK_THRESHOLD) {
-                    EntireUIRoot.getRoot(FriendListPanel.this).startChat(friendInfoLite);
                 }
-                lastClick = System.currentTimeMillis();
+            }
+        };
+        
+        private DoubleClickHandler doubleClickHandler = new DoubleClickHandler() {
+            @Override
+            public void onDoubleClick(DoubleClickEvent event) {
+                EntireUIRoot.getRoot(FriendListPanel.this).startChat(friendInfoLite);
             }
         };
 
@@ -604,6 +609,7 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
             mainPanel.setCellVerticalAlignment(imagePanel, HorizontalPanel.ALIGN_TOP);
             mainPanel.setCellHorizontalAlignment(imagePanel, HorizontalPanel.ALIGN_CENTER);
             statusImage.addClickHandler(clickListener);
+            statusImage.addDoubleClickHandler(doubleClickHandler);
 
             labelPanel.setHeight(HEIGHT + "px");
 
@@ -615,6 +621,7 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
             labelPanel.add(nameLabel, 2, 0);
 
             nameLabel.addClickHandler(clickListener);
+            nameLabel.addDoubleClickHandler(doubleClickHandler);
 
             mainPanel.add(labelPanel);
             iconsPanel.setVisible(false);

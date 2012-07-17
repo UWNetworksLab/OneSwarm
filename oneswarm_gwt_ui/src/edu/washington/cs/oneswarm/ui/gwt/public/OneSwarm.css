@@ -560,6 +560,7 @@ div#os-no_files_label {
 	background-color: #C3D9FF;
 	font-size: 100%;
 	text-align: left;
+	margin: 0px;
 }
 
 .os-sidebar_widget_main_panel.gwt-DisclosurePanel .header td {
