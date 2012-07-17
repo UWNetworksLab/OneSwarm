@@ -41,4 +41,5 @@ public class ImageConstants {
 
     public static final String PROGRESS_SPINNER = "images/transparent_spinner.gif";
 
+    public final static String ICON_CLOSE_BUTTON = "images/close.png";
 }

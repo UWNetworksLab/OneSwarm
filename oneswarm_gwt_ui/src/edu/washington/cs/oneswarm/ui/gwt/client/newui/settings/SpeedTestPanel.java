@@ -68,7 +68,7 @@ public class SpeedTestPanel extends VerticalPanel {
         super.setWidth(WIDTH + "px");
 
         Label selectLabel = new HTML(msg.speed_test_description());
-        selectLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         super.add(selectLabel);
         super.setSpacing(3);

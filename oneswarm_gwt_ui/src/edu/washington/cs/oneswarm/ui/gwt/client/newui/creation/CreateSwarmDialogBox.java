@@ -35,7 +35,6 @@ import edu.washington.cs.oneswarm.ui.gwt.client.newui.EntireUIRoot;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.HelpButton;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.settings.MagicDirectorySettingsPanel;
-import edu.washington.cs.oneswarm.ui.gwt.client.newui.settings.ServiceSharingSettingsPanel;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.PermissionsGroup;
 
 public class CreateSwarmDialogBox extends OneSwarmDialogBox {
@@ -67,7 +66,6 @@ public class CreateSwarmDialogBox extends OneSwarmDialogBox {
 
     VerticalPanel mainPanelShare = null;
     MagicDirectorySettingsPanel mainPanelWatch = null;
-    ServiceSharingSettingsPanel mainPanelService = null;
     final VerticalPanel mainTabPanel = new VerticalPanel();
 
     final ListBox defaultTrackersListBox = new ListBox();
@@ -144,14 +142,13 @@ public class CreateSwarmDialogBox extends OneSwarmDialogBox {
         };
 
         selectLabel = new Label(msg.create_swarm_share_manual_msg());
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         mainTabPanel.add(selectLabel);
         mainTabPanel.setCellVerticalAlignment(selectLabel, VerticalPanel.ALIGN_TOP);
 
         mainPanelShare = createSharePanel();
         mainPanelWatch = new MagicDirectorySettingsPanel();
-        mainPanelService = new ServiceSharingSettingsPanel();
 
         mTabs = new DecoratedTabPanel();
         mTabs.addStyleName(TorrentDownloaderDialog.CSS_F2F_TABS);
@@ -205,9 +202,6 @@ public class CreateSwarmDialogBox extends OneSwarmDialogBox {
 
         if (mainPanelWatch.isReadyToSave()) {
             mainPanelWatch.sync();
-        }
-        if (mainPanelService.isReadyToSave()) {
-            mainPanelService.sync();
         }
     }
 

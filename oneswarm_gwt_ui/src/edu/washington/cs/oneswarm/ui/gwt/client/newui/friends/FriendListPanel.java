@@ -21,6 +21,7 @@ import com.google.gwt.event.logical.shared.OpenEvent;
 import com.google.gwt.event.logical.shared.OpenHandler;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Cookies;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.DisclosurePanel;
@@ -29,6 +30,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -51,7 +53,6 @@ import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmUIServiceAsync;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.StringTools;
 
 public class FriendListPanel extends VerticalPanel implements Updateable {
-    public static final String CSS_FRIEND_HIGHLIGHTED = "os-friend_highlight";
     private static OSMessages msg = OneSwarmGWT.msg;
 
     private static final int UPDATE_LIMIT = 1;
@@ -84,19 +85,6 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
 
     public FriendListPanel() {
         super();
-        // try {
-        // if (Cookies.getCookie(COOKIE_SHOW_OFFLINE_FRIENDS) == null) {
-        // showDisconnected = true;
-        // Cookies.setCookie(COOKIE_SHOW_OFFLINE_FRIENDS, "1");
-        // } else if( Cookies.getCookie(COOKIE_SHOW_OFFLINE_FRIENDS).equals("1")
-        // ) {
-        // showDisconnected = true;
-        // } else {
-        // showDisconnected = false;
-        // }
-        // } catch (Exception e) {
-        // showDisconnected = true;
-        // }
 
         showDisconnected = false;
 
@@ -120,7 +108,7 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
             open = Boolean.parseBoolean(openCookie);
         }
         disclosurePanel.setOpen(open);
-        disclosurePanel.addStyleName("os-friendList");
+        disclosurePanel.addStyleName(OneSwarmCss.SidebarWidget.MAIN_PANEL);
 
         // Borders.simpleBorder(panel, 5, Borders.ALL);
         // Borders.simpleBorder(panel, 5, Borders.ALL);
@@ -148,7 +136,7 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
 
         // the menu below the friend list
         MenuBar footerMenu = new MenuBar();
-        footerMenu.addStyleName("os-friendListFooter");
+        footerMenu.addStyleName(OneSwarmCss.SidebarWidget.FOOTER_MENU_BAR);
         footerMenu.setWidth("100%");
 
         MenuItem addFriendItem = new MenuItem(msg.friends_sidebar_add_friends(), new Command() {
@@ -162,7 +150,7 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
             }
         });
 
-        addFriendItem.setStylePrimaryName("os-friendListFooterMenu");
+        addFriendItem.setStylePrimaryName(OneSwarmCss.SidebarWidget.FOOTER_MENU_ITEM);
         footerMenu.addItem(addFriendItem);
         // ********** done add menu
 
@@ -242,18 +230,13 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
         MenuItem optionsItem = new MenuItem(
                 "Options<img src='images/icons/disclosure.png' width='10px' height='10px'>", true,
                 optionsMenu);
-        optionsItem.setStylePrimaryName("os-friendListFooterMenu");
+        optionsItem.setStylePrimaryName(OneSwarmCss.SidebarWidget.FOOTER_MENU_ITEM);
         // footerMenu.addItem(optionsItem);
 
         contentPanel.add(footerMenu);
         contentPanel.setCellHorizontalAlignment(footerMenu, HorizontalPanel.ALIGN_CENTER);
 
         disclosurePanel.add(contentPanel);
-
-        // RoundedPanel rp = new RoundedPanel(panel, RoundedPanel.TOPRIGHT |
-        // RoundedPanel.BOTTOMLEFT, 3);
-        // rp.setCornerStyleName("os-friendListCorners");
-        // this.initWidget(rp);
         this.add(disclosurePanel);
         if (Cookies.getCookie("ShowBlockedFriends") == null) {
             Cookies.setCookie("ShowBlockedFriends", "1", OneSwarmConstants.TEN_YEARS_FROM_NOW);
@@ -265,7 +248,6 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
         if (mSelectedFriend != null) {
             mSelectedFriend.clearSelected();
         }
-        mSelectedFriend = null;
     }
 
     public FriendInfoLite getSelectedFriend() {
@@ -399,12 +381,10 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
                     if (f.getStatus() == FriendInfoLite.STATUS_ONLINE) {
                         mSelectedFriend.clearSelected();
                         p.setSelected();
-                        mSelectedFriend = p;
                     } else {
                         // selected friend went offline
                         p.clearSelected();
                         mSelectedFriend = null;
-                        EntireUIRoot.getRoot(this).friendFilterChanged();
                     }
                 } else {
                     p.clearSelected();
@@ -442,8 +422,6 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
                 if (f.equals(getSelectedFriend())) {
                     if (f.getStatus() == FriendInfoLite.STATUS_ONLINE) {
                         p.setSelected();
-                        mSelectedFriend = p;
-
                     } else {
                         // selected friend went offline
                         p.clearSelected();
@@ -579,13 +557,14 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
             public void onClick(ClickEvent event) {
 
                 if (!isSelected && friendInfoLite.getStatus() == FriendInfoLite.STATUS_ONLINE) {
-                    FriendPanel.this.addStyleName(CSS_FRIEND_HIGHLIGHTED);
+                    FriendPanel.this.addStyleName(OneSwarmCss.SidebarWidget.SELECTED_ITEM);
                     if (mSelectedFriend != null) {
                         mSelectedFriend.clearSelected();
                     }
-                    mSelectedFriend = FriendPanel.this;
+                    History.newItem("friend-" + FriendListPanel.this.getSelectedFriend().getId());
                     setSelected();
-                    EntireUIRoot.getRoot(FriendListPanel.this).friendFilterChanged();
+                    
+                    mSelectedFriend = FriendPanel.this;
                     OneSwarmGWT.log("selected friend conn id: " + friendInfoLite.getConnectionId());
                 } else if ((System.currentTimeMillis() - lastClick) < SwarmsBrowser.DOUBLE_CLICK_THRESHOLD) {
                     EntireUIRoot.getRoot(FriendListPanel.this).startChat(friendInfoLite);
@@ -751,18 +730,20 @@ public class FriendListPanel extends VerticalPanel implements Updateable {
         }
 
         public void setSelected() {
-            if (!isSelected) {
-                FriendPanel.this.addStyleName(CSS_FRIEND_HIGHLIGHTED);
+
+            EntireUIRoot.getRoot(FriendListPanel.this).clearSidebarSelection();
+            if (mSelectedFriend != this) {
+                mSelectedFriend = this;
+                FriendPanel.this.addStyleName(OneSwarmCss.SidebarWidget.SELECTED_ITEM);
             }
             isSelected = true;
         }
 
         public void clearSelected() {
-            if (isSelected) {
-                FriendPanel.this.removeStyleName(CSS_FRIEND_HIGHLIGHTED);
-                super.setFocus(false);
+            if (mSelectedFriend == this) {
+                mSelectedFriend = null;
+                FriendPanel.this.removeStyleName(OneSwarmCss.SidebarWidget.SELECTED_ITEM);
             }
-            isSelected = false;
         }
 
         public FriendInfoLite getFriendInfo() {

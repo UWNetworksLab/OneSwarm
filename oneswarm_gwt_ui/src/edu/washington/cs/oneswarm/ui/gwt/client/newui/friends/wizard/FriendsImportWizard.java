@@ -20,6 +20,7 @@ import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmGWT;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
 import edu.washington.cs.oneswarm.ui.gwt.client.i18n.OSMessages;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.FriendPropertiesTable;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.CommunityRecord;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInfoLite;
@@ -245,7 +246,7 @@ public class FriendsImportWizard extends OneSwarmDialogBox {
 
         friendSrcRb = new LinkedList<RadioButton>();
         Label selectLabel = new Label(msg.add_friends_wizard_src_choose());
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         p.add(selectLabel);
         p.setCellVerticalAlignment(selectLabel, VerticalPanel.ALIGN_TOP);

@@ -45,7 +45,7 @@ public class NewUserSetupPanel extends VerticalPanel implements Updateable {
         //
         this.swarmsBrowser = browser;
 
-        addStyleName(OneSwarmCss.CSS_NOTHING_SHOWING);
+        addStyleName(OneSwarmCss.NO_FILES_LABEL);
         setWidth("100%");
 
         updateStatus(msg.loading());

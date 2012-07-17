@@ -89,7 +89,7 @@ public class FriendsDetailsListPanel extends VerticalPanel implements Updateable
                     if (result.getFriendList().length > 0) {
                         initUI();
                     } else {
-                        HTML msg = new HTML("<div id=\"" + OneSwarmCss.CSS_NOTHING_SHOWING + "\">"
+                        HTML msg = new HTML("<div id=\"" + OneSwarmCss.NO_FILES_LABEL + "\">"
                                 + Strings.get(Strings.NO_FRIENDS_MSG) + "</div>");
                         add(msg);
                     }

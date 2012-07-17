@@ -4,7 +4,10 @@ import java.util.ArrayList;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DoubleClickEvent;
+import com.google.gwt.event.dom.client.DoubleClickHandler;
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AbsolutePanel;
@@ -26,40 +29,133 @@ import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.FriendListPanel;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.wizard.FriendsImportWizard;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.CommunityRecord;
 
-public class CommunityServersSidePanel extends VerticalPanel implements Updateable {
+public class CommunityServersSidePanel extends VerticalPanel implements Updateable, SidebarWidget {
 
     private static OSMessages msg = OneSwarmGWT.msg;
 
     ServerPanel mSelectedServer = null;
 
+    private final VerticalPanel serverListVP = new VerticalPanel();
+    private final DisclosurePanel disclosurePanel = new DisclosurePanel(
+            msg.community_servers_sidebar_header());
+
+    public CommunityServersSidePanel() {
+
+        VerticalPanel contentPanel = new VerticalPanel();
+        // add the panel that will contain the friends
+        serverListVP.setWidth("100%");
+
+        disclosurePanel.setOpen(true);
+        disclosurePanel.addStyleName(OneSwarmCss.SidebarWidget.MAIN_PANEL);
+
+        MenuBar footerMenu = new MenuBar();
+        footerMenu.addStyleName(OneSwarmCss.SidebarWidget.FOOTER_MENU_BAR);
+        footerMenu.setWidth("100%");
+        MenuItem addFriendItem = new MenuItem(msg.community_servers_sidebar_add(), new Command() {
+            public void execute() {
+                OneSwarmDialogBox dlg = new FriendsImportWizard(
+                        FriendsImportWizard.FRIEND_SRC_COMMUNITY);
+                dlg.show();
+                dlg.setVisible(false);
+                dlg.center();
+                dlg.setPopupPosition(dlg.getPopupLeft(), Math.max(40, dlg.getPopupTop() - 200));
+                dlg.setVisible(true);
+            }
+        });
+
+        addFriendItem.setStylePrimaryName(OneSwarmCss.SidebarWidget.FOOTER_MENU_ITEM);
+        footerMenu.addItem(addFriendItem);
+        addFriendItem.getElement().setId("addFriendItemLink");
+
+        contentPanel.add(serverListVP);
+        contentPanel.add(footerMenu);
+        contentPanel.setCellHorizontalAlignment(footerMenu, HorizontalPanel.ALIGN_CENTER);
+
+        disclosurePanel.add(contentPanel);
+
+        this.add(disclosurePanel);
+
+        OneSwarmGWT.addToUpdateTask(this);
+    }
+
+    long nextUpdateRPC = 0;
+
+    public void update(int count) {
+        if (System.currentTimeMillis() > nextUpdateRPC) {
+
+            OneSwarmRPCClient.getService().getStringListParameterValue(
+                    OneSwarmRPCClient.getSessionID(), "oneswarm.community.servers",
+                    new AsyncCallback<ArrayList<String>>() {
+                        public void onFailure(Throwable caught) {
+                            caught.printStackTrace();
+                        }
+
+                        public void onSuccess(ArrayList<String> result) {
+                            nextUpdateRPC = System.currentTimeMillis() + 5 * 1000;
+
+                            if (result.size() / 5 == serverListVP.getWidgetCount()) {
+                                // might need to update status
+                                for (int i = 0; i < result.size() / 5; i++) {
+                                    CommunityRecord rec = new CommunityRecord(result, i * 5);
+                                    ((ServerPanel) serverListVP.getWidget(i)).update(rec);
+                                }
+                            } else {
+                                serverListVP.clear();
+                                for (int i = 0; i < result.size() / 5; i++) {
+                                    CommunityRecord rec = new CommunityRecord(result, i * 5);
+                                    serverListVP.add(new ServerPanel(rec));
+                                }
+                            }
+                        }
+                    });
+            nextUpdateRPC = System.currentTimeMillis() + 10 * 1000;
+        }
+    }
+
+    public void clearSelectedServer() {
+        if (mSelectedServer != null) {
+            mSelectedServer.clearSelected();
+            mSelectedServer = null;
+        }
+    }
+
+    public CommunityRecord getSelectedServer() {
+        if (mSelectedServer == null) {
+            return null;
+        }
+        return mSelectedServer.getRecord();
+    }
+
+    @Override
+    public void clearSelection() {
+        this.clearSelectedServer();
+    }
+
     class ServerPanel extends FocusPanel {
         private static final int MAX_LABEL_NAME_LENGTH = 20;
 
         private boolean isSelected = false;
-        private long lastClick = 0;
 
-        private final ClickHandler clickListener = new ClickHandler() {
+        private final ClickHandler clickHandler = new ClickHandler() {
+            @Override
             public void onClick(ClickEvent event) {
-
                 if (!isSelected) {
                     if (server.getSplash_path() == null) {
                         Window.alert(msg.community_servers_sidebar_no_files());
                         return;
                     }
-
-                    ServerPanel.this.addStyleName(FriendListPanel.CSS_FRIEND_HIGHLIGHTED);
-                    if (mSelectedServer != null) {
-                        mSelectedServer.clearSelected();
-                    }
-                    mSelectedServer = ServerPanel.this;
+                    EntireUIRoot.getRoot(CommunityServersSidePanel.this).clearSidebarSelection();
                     setSelected();
-                    EntireUIRoot.getRoot(CommunityServersSidePanel.this).serverFilterChanged();
-                } else if ((System.currentTimeMillis() - lastClick) < SwarmsBrowser.DOUBLE_CLICK_THRESHOLD) {
-                    Window.open(server.getBaseURL(), "_blank", null);
+                    History.newItem("cserver-" + server.getBaseURL().hashCode());
                 }
-                lastClick = System.currentTimeMillis();
+            }
+        };
 
-            } // onClick()
+        public final DoubleClickHandler doubleClickHandler = new DoubleClickHandler() {
+            @Override
+            public void onDoubleClick(DoubleClickEvent event) {
+                Window.open(server.getBaseURL(), "_blank", null);
+            }
         };
 
         private final HorizontalPanel mainPanel = new HorizontalPanel();
@@ -92,7 +188,6 @@ public class CommunityServersSidePanel extends VerticalPanel implements Updateab
             mainPanel.add(imagePanel);
             mainPanel.setCellVerticalAlignment(imagePanel, HorizontalPanel.ALIGN_TOP);
             mainPanel.setCellHorizontalAlignment(imagePanel, HorizontalPanel.ALIGN_CENTER);
-            statusImage.addClickHandler(clickListener);
 
             labelPanel.setHeight(HEIGHT + "px");
 
@@ -103,7 +198,8 @@ public class CommunityServersSidePanel extends VerticalPanel implements Updateab
             nameLabel.setText("test");
             labelPanel.add(nameLabel, 2, 0);
 
-            nameLabel.addClickHandler(clickListener);
+            this.addClickHandler(clickHandler);
+            this.addDoubleClickHandler(doubleClickHandler);
 
             mainPanel.add(labelPanel);
 
@@ -133,18 +229,17 @@ public class CommunityServersSidePanel extends VerticalPanel implements Updateab
         }
 
         public void setSelected() {
-            if (!isSelected) {
-                ServerPanel.this.addStyleName(FriendListPanel.CSS_FRIEND_HIGHLIGHTED);
+            if (this != mSelectedServer) {
+                ServerPanel.this.addStyleName(OneSwarmCss.SidebarWidget.SELECTED_ITEM);
+                mSelectedServer = this;
             }
-            isSelected = true;
         }
 
         public void clearSelected() {
-            if (isSelected) {
-                ServerPanel.this.removeStyleName(FriendListPanel.CSS_FRIEND_HIGHLIGHTED);
-                super.setFocus(false);
+            if (this == mSelectedServer) {
+                ServerPanel.this.removeStyleName(OneSwarmCss.SidebarWidget.SELECTED_ITEM);
+                mSelectedServer = null;
             }
-            isSelected = false;
         }
 
         public CommunityRecord getRecord() {
@@ -156,102 +251,4 @@ public class CommunityServersSidePanel extends VerticalPanel implements Updateab
             refreshUI();
         }
     }
-
-    private final VerticalPanel serverListVP = new VerticalPanel();
-    private final DisclosurePanel disclosurePanel = new DisclosurePanel(
-            msg.community_servers_sidebar_header(), false);
-
-    public CommunityServersSidePanel() {
-
-        VerticalPanel contentPanel = new VerticalPanel();
-        // add the panel that will contain the friends
-        serverListVP.setWidth("100%");
-
-        disclosurePanel.setOpen(true);
-        disclosurePanel.addStyleName("os-friendList");
-
-        MenuBar footerMenu = new MenuBar();
-        footerMenu.addStyleName("os-friendListFooter");
-        footerMenu.setWidth("100%");
-        MenuItem addFriendItem = new MenuItem(msg.community_servers_sidebar_add(), new Command() {
-            public void execute() {
-                OneSwarmDialogBox dlg = new FriendsImportWizard(
-                        FriendsImportWizard.FRIEND_SRC_COMMUNITY);
-                dlg.show();
-                dlg.setVisible(false);
-                dlg.center();
-                dlg.setPopupPosition(dlg.getPopupLeft(), Math.max(40, dlg.getPopupTop() - 200));
-                dlg.setVisible(true);
-            }
-        });
-
-        addFriendItem.setStylePrimaryName("os-friendListFooterMenu");
-        footerMenu.addItem(addFriendItem);
-        addFriendItem.getElement().setId("addFriendItemLink");
-
-        contentPanel.add(serverListVP);
-        contentPanel.add(footerMenu);
-        contentPanel.setCellHorizontalAlignment(footerMenu, HorizontalPanel.ALIGN_CENTER);
-
-        disclosurePanel.add(contentPanel);
-
-        this.add(disclosurePanel);
-
-        OneSwarmGWT.addToUpdateTask(this);
-    }
-
-    long nextUpdateRPC = 0;
-
-    public void update(int count) {
-        if (System.currentTimeMillis() > nextUpdateRPC) {
-
-            OneSwarmRPCClient.getService().getStringListParameterValue(
-                    OneSwarmRPCClient.getSessionID(), "oneswarm.community.servers",
-                    new AsyncCallback<ArrayList<String>>() {
-                        public void onFailure(Throwable caught) {
-                            caught.printStackTrace();
-                        }
-
-                        public void onSuccess(ArrayList<String> result) {
-                            nextUpdateRPC = System.currentTimeMillis() + 5 * 1000;
-
-                            if (result.size() / 5 == serverListVP.getWidgetCount()) {
-
-                                // might need to update status
-                                for (int i = 0; i < result.size() / 5; i++) {
-                                    CommunityRecord rec = new CommunityRecord(result, i * 5);
-                                    ServerPanel p = (ServerPanel) serverListVP.getWidget(i);
-                                    p.update(rec);
-                                }
-
-                                return;
-                            }
-
-                            serverListVP.clear();
-
-                            for (int i = 0; i < result.size() / 5; i++) {
-                                CommunityRecord rec = new CommunityRecord(result, i * 5);
-                                serverListVP.add(new ServerPanel(rec));
-                            }
-                        }
-                    });
-
-            nextUpdateRPC = System.currentTimeMillis() + 10 * 1000;
-        }
-    }
-
-    public void clearSelectedServer() {
-        if (mSelectedServer != null) {
-            mSelectedServer.clearSelected();
-            mSelectedServer = null;
-        }
-    }
-
-    public CommunityRecord getSelectedServer() {
-        if (mSelectedServer == null) {
-            return null;
-        }
-        return mSelectedServer.getRecord();
-    }
-
 }

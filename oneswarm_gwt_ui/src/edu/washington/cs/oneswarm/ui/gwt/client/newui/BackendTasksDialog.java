@@ -24,7 +24,7 @@ public class BackendTasksDialog extends OneSwarmDialogBox {
         VerticalPanel mainPanel = new VerticalPanel();
 
         Label selectLabel = new Label("Cancel running tasks.");
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         mainPanel.add(selectLabel);
         mainPanel.setCellVerticalAlignment(selectLabel, VerticalPanel.ALIGN_TOP);

@@ -39,6 +39,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmGWT;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInfoLite;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmUIServiceAsync;
 
@@ -61,7 +62,7 @@ class AddFriendDialog extends OneSwarmDialogBox implements ClickHandler, ChangeH
 
         Label selectLabel = new Label(
                 "Enter your friend's nickname and public key into the fields below.");
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         mainPanel.add(selectLabel);
 

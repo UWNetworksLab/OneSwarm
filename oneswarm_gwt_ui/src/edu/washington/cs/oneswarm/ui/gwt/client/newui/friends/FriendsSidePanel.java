@@ -11,18 +11,17 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
-import edu.washington.cs.oneswarm.ui.gwt.OsgwtuiMain;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmGWT;
-import edu.washington.cs.oneswarm.ui.gwt.client.Updateable;
 import edu.washington.cs.oneswarm.ui.gwt.client.i18n.OSMessages;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.SidebarWidget;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.wizard.FriendsImportCallback;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.wizard.FriendsImportWizard;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.wizard.InvitationCreatePanel;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInfoLite;
 
-public class FriendsSidePanel extends VerticalPanel implements Updateable {
+public class FriendsSidePanel extends VerticalPanel implements SidebarWidget {
     private final FriendListPanel friendList;
     private static OSMessages msg = OneSwarmGWT.msg;
 
@@ -60,13 +59,13 @@ public class FriendsSidePanel extends VerticalPanel implements Updateable {
     private class FriendsSideInvitePanel extends VerticalPanel {
 
         private final DisclosurePanel disclosurePanel = new DisclosurePanel(
-                msg.friends_sidebar_invitation_header(), false);
+                msg.friends_sidebar_invitation_header());
 
         private final TextBox emailBox = new TextBox();
 
         public FriendsSideInvitePanel() {
             disclosurePanel.setOpen(true);
-            disclosurePanel.addStyleName("os-friendInviteSidePanel");
+            disclosurePanel.addStyleName(OneSwarmCss.SidebarWidget.MAIN_PANEL);
             disclosurePanel.setWidth("100%");
             this.add(disclosurePanel);
 
@@ -131,5 +130,10 @@ public class FriendsSidePanel extends VerticalPanel implements Updateable {
                 emailBox.setText("");
             }
         }
+    }
+
+    @Override
+    public void clearSelection() {
+        this.getFriendListPanel().clearSelectedFriend();
     }
 }

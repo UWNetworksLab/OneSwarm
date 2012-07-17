@@ -105,16 +105,13 @@ import edu.washington.cs.oneswarm.f2f.permissions.GroupBean;
 import edu.washington.cs.oneswarm.f2f.permissions.PermissionsDAO;
 import edu.washington.cs.oneswarm.f2f.servicesharing.ClientService;
 import edu.washington.cs.oneswarm.f2f.servicesharing.ServiceSharingManager;
-import edu.washington.cs.oneswarm.f2f.servicesharing.SharedService;
 import edu.washington.cs.oneswarm.f2f.share.ShareManagerTools;
 import edu.washington.cs.oneswarm.ui.gwt.BackendErrorLog;
 import edu.washington.cs.oneswarm.ui.gwt.CoreInterface;
 import edu.washington.cs.oneswarm.ui.gwt.CoreTools;
 import edu.washington.cs.oneswarm.ui.gwt.RemoteAccessConfig;
 import edu.washington.cs.oneswarm.ui.gwt.RemoteAccessForward;
-import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmGWT;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
-import edu.washington.cs.oneswarm.ui.gwt.client.i18n.OSMessages;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.FileTypeFilter;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.Strings;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.SwarmsBrowser;
@@ -123,7 +120,6 @@ import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.wizard.FriendsImpo
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.settings.MagicWatchType;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.BackendErrorReport;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.BackendTask;
-import edu.washington.cs.oneswarm.ui.gwt.rpc.ClientServiceDTO;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.CommunityRecord;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FileListLite;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FileTree;
@@ -140,7 +136,7 @@ import edu.washington.cs.oneswarm.ui.gwt.rpc.PagedTorrentInfo;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.PermissionsGroup;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.ReportableException;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.SerialChatMessage;
-import edu.washington.cs.oneswarm.ui.gwt.rpc.SharedServiceDTO;
+import edu.washington.cs.oneswarm.ui.gwt.rpc.ClientServiceInfo;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.SpeedTestResult;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.StringTools;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.TextSearchResultLite;
@@ -375,8 +371,7 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
         /*
          * Check that the module path must be in the same web app as the servlet
          * itself. If you need to implement a scheme different than this,
-         * override
-         * this method.
+         * override this method.
          */
         if (modulePath == null || !modulePath.startsWith(contextPath)) {
             String message = "ERROR: The module path requested, "
@@ -549,43 +544,6 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
         }
         recentchanges = value;
     }
-    
-    /**
-     * Returns an array of FileItems, a compact format for transmitting information about files stored on the server.
-     * @param path The directory path to display the contents of.
-     * @return Array of FileItems's one for each file or directory in the given path.
-     * @author Nick Martindell
-     */
-    @Override
-    public FileInfo[] listFiles(String session, String path) {
-    	try {
-            if (this.passedSessionIDCheck(session) == false) {
-                throw new Exception("bad cookie");
-            }
-	
-			//Empty path returns root dirs, otherwise list dirs under path
-			File[] directory;
-			if (path.equalsIgnoreCase("")) {
-				directory = File.listRoots();
-			} else {
-				directory = new File(path).listFiles();
-				Arrays.sort(directory);
-			}
-			
-			FileInfo[] files = new FileInfo[directory.length];
-			for (int i = 0; i < files.length; i++) {
-				String name = directory[i].getName();
-				if (name.equalsIgnoreCase(""))
-					name = "/";
-
-				files[i] = new FileInfo(directory[i].getAbsolutePath(), name, directory[i].isDirectory(), directory[i].canRead());
-			}
-			return files;
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    		return null;
-    	}
-	}
 
     @Override
     public Boolean createSwarmFromLocalFileSystemPath(final String session, final String basePath,
@@ -614,7 +572,7 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
                         int task_id = -1;
 
                         try {
-                            //TorrentInfo info = null;
+                            // TorrentInfo info = null;
                             String path = paths.get(current_index);
                             File file = new File(path);
 
@@ -849,7 +807,7 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
                     OneSwarmConstants.ERROR_REPORTING_PORT);
             DataOutputStream out = new DataOutputStream(relay.getOutputStream());
 
-            //StringWriter backing = new StringWriter();
+            // StringWriter backing = new StringWriter();
 
             byte[] bytes = inError.getText().getBytes();
             out.writeInt(bytes.length);
@@ -3167,7 +3125,6 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
 
     @Override
     public String saveRemoteAccessCredentials(String session, String username, String password) {
-
         if (!passedSessionIDCheck(session)) {
             throw new RuntimeException("bad session cookie");
         }
@@ -4134,39 +4091,117 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
         }
     }
 
-    @Override
-    public ArrayList<ClientServiceDTO> getClientServices() {
-        List<ClientService> clientServices = ServiceSharingManager.getInstance()
-                .getClientServices();
-        ArrayList<ClientServiceDTO> serviceDTOs = new ArrayList<ClientServiceDTO>();
-        for (ClientService clientService : clientServices) {
-            serviceDTOs.add(clientService.toDTO());
-        }
-        return serviceDTOs;
-    }
+    /*
+     * @Override public ArrayList<ClientServiceDTO> getClientServices() {
+     * List<ClientService> clientServices = ServiceSharingManager.getInstance()
+     * .getClientServices(); ArrayList<ClientServiceDTO> serviceDTOs = new
+     * ArrayList<ClientServiceDTO>(); for (ClientService clientService :
+     * clientServices) { serviceDTOs.add(clientService.toDTO()); } return
+     * serviceDTOs; }
+     * 
+     * @Override public ArrayList<SharedServiceDTO> getSharedServices() {
+     * List<SharedService> sharesServices = ServiceSharingManager.getInstance()
+     * .getSharedServices(); ArrayList<SharedServiceDTO> serviceDTOs = new
+     * ArrayList<SharedServiceDTO>(); for (SharedService sharedService :
+     * sharesServices) { serviceDTOs.add(sharedService.toDTO()); } return
+     * serviceDTOs; }
+     * 
+     * @Override public void saveClientServices(ArrayList<ClientServiceDTO>
+     * services) { ServiceSharingManager.getInstance().updateClients(services);
+     * }
+     * 
+     * 
+     * @Override public void saveSharedServices(ArrayList<SharedServiceDTO>
+     * services) throws OneSwarmException { try {
+     * ServiceSharingManager.getInstance().updateSharedServices(services); }
+     * catch (UnknownHostException e) { throw new
+     * OneSwarmException(e.getClass().getName() + "::" + e.getMessage()); } }
+     */
 
+    /**
+     * Returns an array of FileItems, a compact format for transmitting
+     * information about files stored on the server.
+     * 
+     * @param path
+     *            The directory path to display the contents of.
+     * @return Array of FileItems's one for each file or directory in the given
+     *         path.
+     * @author Nick Martindell
+     */
     @Override
-    public ArrayList<SharedServiceDTO> getSharedServices() {
-        List<SharedService> sharesServices = ServiceSharingManager.getInstance()
-                .getSharedServices();
-        ArrayList<SharedServiceDTO> serviceDTOs = new ArrayList<SharedServiceDTO>();
-        for (SharedService sharedService : sharesServices) {
-            serviceDTOs.add(sharedService.toDTO());
-        }
-        return serviceDTOs;
-    }
-
-    @Override
-    public void saveClientServices(ArrayList<ClientServiceDTO> services) {
-        ServiceSharingManager.getInstance().updateClients(services);
-    }
-
-    @Override
-    public void saveSharedServices(ArrayList<SharedServiceDTO> services) throws OneSwarmException {
+    public FileInfo[] listFiles(String session, String path) {
         try {
-            ServiceSharingManager.getInstance().updateSharedServices(services);
-        } catch (UnknownHostException e) {
-            throw new OneSwarmException(e.getClass().getName() + "::" + e.getMessage());
+            if (this.passedSessionIDCheck(session) == false) {
+                throw new Exception("bad cookie");
+            }
+
+            // Empty path returns root dirs, otherwise list dirs under path
+            File[] directory;
+            if (path.equalsIgnoreCase("")) {
+                directory = File.listRoots();
+            } else {
+                directory = new File(path).listFiles();
+                Arrays.sort(directory);
+            }
+
+            FileInfo[] files = new FileInfo[directory.length];
+            for (int i = 0; i < files.length; i++) {
+                String name = directory[i].getName();
+                if (name.equalsIgnoreCase(""))
+                    name = "/";
+
+                files[i] = new FileInfo(directory[i].getAbsolutePath(), name,
+                        directory[i].isDirectory(), directory[i].canRead());
+            }
+            return files;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public ClientServiceInfo[] getClientServices(String session) {
+        checkSession(session);
+
+        ClientServiceInfo[] returnArray = new ClientServiceInfo[ServiceSharingManager.getInstance().clientServices
+                .size()];
+        Iterator<ClientService> services = ServiceSharingManager.getInstance().clientServices
+                .values().iterator();
+        for (int i = 0; services.hasNext(); i++) {
+            ClientService service = services.next();
+            returnArray[i] = new ClientServiceInfo(service.getServerSeachKey(), service.getName());
+        }
+        return returnArray;
+    }
+
+    @Override
+    public void removeClientService(String session, long id) {
+        checkSession(session);
+
+        ServiceSharingManager.getInstance().clientServices.remove(id);
+    }
+
+    @Override
+    public void addClientService(String session, long id, String name) {
+        checkSession(session);
+
+        ClientService newService = new ClientService(id);
+        newService.setName(name);
+        ServiceSharingManager.getInstance().clientServices.put(id, newService);
+    }
+
+    @Override
+    public String activateClientService(String session, String name, long id) {
+        checkSession(session);
+
+        int port = ServiceSharingManager.getInstance().registerClientService(name, 8080, id);
+        return "http://localhost:" + port;
+    }
+
+    private void checkSession(String session) {
+        if (!passedSessionIDCheck(session)) {
+            throw new RuntimeException("invalid cookie");
         }
     }
 

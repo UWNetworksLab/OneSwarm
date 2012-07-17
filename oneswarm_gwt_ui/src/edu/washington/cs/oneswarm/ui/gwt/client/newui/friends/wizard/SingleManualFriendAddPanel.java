@@ -22,6 +22,7 @@ import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
 import edu.washington.cs.oneswarm.ui.gwt.client.Updateable;
 import edu.washington.cs.oneswarm.ui.gwt.client.i18n.OSMessages;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.HelpButton;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.FriendPropertiesPanel;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInfoLite;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmUIServiceAsync;
@@ -50,7 +51,7 @@ public class SingleManualFriendAddPanel extends VerticalPanel implements KeyUpHa
          * step 1: friends name
          */
         Label selectLabel = new HTML(msg.add_friends_manual_step_1_type_nickname_HTML());
-        selectLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         super.add(selectLabel);
 
@@ -81,7 +82,7 @@ public class SingleManualFriendAddPanel extends VerticalPanel implements KeyUpHa
          * step 2: send own public key
          */
         Label ownLabel = new HTML(msg.add_friends_manual_step_2_send_key_HTML());
-        ownLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+        ownLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         ownLabel.setWidth(WIDTH + "px");
         super.add(ownLabel);
 
@@ -97,7 +98,7 @@ public class SingleManualFriendAddPanel extends VerticalPanel implements KeyUpHa
         Label publicKeyLabel = new HTML(msg.add_friends_manual_step_3_paste_key_HTML());
         publicKeyLabel.setWidth(WIDTH + "px");
         super.add(publicKeyLabel);
-        publicKeyLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+        publicKeyLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
 
         friendsPublicKeyArea.setVisibleLines(7);
         friendsPublicKeyArea.setWidth(PUB_KEY_WIDTH + "px");
@@ -116,7 +117,7 @@ public class SingleManualFriendAddPanel extends VerticalPanel implements KeyUpHa
         Label limitedLabel = new HTML(msg.add_friends_manual_step_4_options_HTML());
         limitedLabel.setWidth(WIDTH + "px");
         super.add(limitedLabel);
-        limitedLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+        limitedLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
 
         limitedFriendBox.setValue(true);
         HorizontalPanel limitedPanel = new HorizontalPanel();

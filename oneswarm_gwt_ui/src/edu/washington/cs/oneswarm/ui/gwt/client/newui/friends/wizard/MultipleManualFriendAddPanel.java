@@ -57,7 +57,7 @@ public class MultipleManualFriendAddPanel extends VerticalPanel implements Click
         this.callback = _fwcallback;
 
         Label selectLabel = new Label(msg.add_friends_manual_multi_instructions());
-        selectLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         add(selectLabel);
 
@@ -134,7 +134,7 @@ public class MultipleManualFriendAddPanel extends VerticalPanel implements Click
         HorizontalPanel bb = new HorizontalPanel();
         bb.add(skipButton);
         bb.add(nextButton);
-        header.addStyleName(CreateSwarmDialogBox.CSS_DIALOG_HEADER);
+        header.addStyleName(OneSwarmCss.Dialog.HEADER);
 
         HorizontalPanel nickPanel = new HorizontalPanel();
         nickPanel.setSpacing(3);

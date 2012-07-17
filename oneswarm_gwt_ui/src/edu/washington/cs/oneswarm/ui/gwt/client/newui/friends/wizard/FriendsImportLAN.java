@@ -58,7 +58,7 @@ public class FriendsImportLAN extends VerticalPanel implements Updateable {
 
         Label myInfoLabel = new Label(msg.add_friends_lan_my_information());
         HorizontalPanel infoLabelPanel = new HorizontalPanel();
-        myInfoLabel.addStyleName(OneSwarmDialogBox.CSS_DIALOG_HEADER);
+        myInfoLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         infoLabelPanel.add(myInfoLabel);
         myInfoLabel.setWidth(FriendsImportWizard.WIDTH + "px");
         super.add(myInfoLabel);
@@ -67,7 +67,7 @@ public class FriendsImportLAN extends VerticalPanel implements Updateable {
         super.add(getMyInfoPanel());
 
         Label detectedLabel = new Label(msg.add_friends_lan_local_oneswarm_users());
-        detectedLabel.addStyleName(OneSwarmDialogBox.CSS_DIALOG_HEADER);
+        detectedLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         detectedLabel.setWidth(FriendsImportWizard.WIDTH + "px");
         super.add(detectedLabel);
 

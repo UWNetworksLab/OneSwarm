@@ -8,302 +8,289 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmConstants.SecurityLevel;
 
 public interface OneSwarmUIServiceAsync {
-    public void startBackend(AsyncCallback callback);
+    void startBackend(AsyncCallback callback);
 
-    public void getVersion(String session, AsyncCallback<String> callback);
+    void getVersion(String session, AsyncCallback<String> callback);
 
-    public void createSwarmFromLocalFileSystemPath(String session, String basePath,
+    void createSwarmFromLocalFileSystemPath(String session, String basePath,
             ArrayList<String> path, boolean startSeeding, String announce,
             ArrayList<PermissionsGroup> inPermittedGroups, AsyncCallback<Boolean> callback);
 
-    public void reportError(ReportableException inError, AsyncCallback callback);
+    void reportError(ReportableException inError, AsyncCallback callback);
 
-    public void getTorrentsInfo(String session, int page, AsyncCallback callback);
+    void getTorrentsInfo(String session, int page, AsyncCallback callback);
 
-    public void getTransferringInfo(String session, AsyncCallback<TorrentList> inCallback);
+    void getTransferringInfo(String session, AsyncCallback<TorrentList> inCallback);
 
-    public void getStopped(String session, AsyncCallback<Boolean> inCallback);
+    void getStopped(String session, AsyncCallback<Boolean> inCallback);
 
-    public void recentFriendChanges(String session, AsyncCallback<Boolean> inCallback);
+    void recentFriendChanges(String session, AsyncCallback<Boolean> inCallback);
 
-    public void setRecentChanges(String session, boolean value, AsyncCallback callback);
+    void setRecentChanges(String session, boolean value, AsyncCallback callback);
 
-    public void getSidebarStats(String session, AsyncCallback<HashMap<String, String>> inCallback);
+    void getSidebarStats(String session, AsyncCallback<HashMap<String, String>> inCallback);
 
-    public void getLimits(String session, AsyncCallback<HashMap<String, String>> inCallback);
+    void getLimits(String session, AsyncCallback<HashMap<String, String>> inCallback);
 
-    public void getDataStats(String session, AsyncCallback<HashMap<String, String>> inCallback);
+    void getDataStats(String session, AsyncCallback<HashMap<String, String>> inCallback);
 
-    public void getCounts(String session, AsyncCallback<HashMap<String, String>> inCallback);
+    void getCounts(String session, AsyncCallback<HashMap<String, String>> inCallback);
 
-    public void resetLimit(String session, String limittype, AsyncCallback callback);
+    void resetLimit(String session, String limittype, AsyncCallback callback);
 
-    public void checkIfWarning(String session, AsyncCallback<String[]> inCallback);
+    void checkIfWarning(String session, AsyncCallback<String[]> inCallback);
 
-    public void setLimits(String session, String day, String week, String month, String year,
+    void setLimits(String session, String day, String week, String month, String year,
             AsyncCallback callback);
 
-    public void ping(String session, String version, AsyncCallback<String> callback);
+    void ping(String session, String version, AsyncCallback<String> callback);
 
-    public void startTorrent(String session, String[] torrentID, AsyncCallback<Boolean> callback);
+    void startTorrent(String session, String[] torrentID, AsyncCallback<Boolean> callback);
 
-    public void stopTorrent(String session, String[] torrenID, AsyncCallback<Boolean> callback);
+    void stopTorrent(String session, String[] torrenID, AsyncCallback<Boolean> callback);
 
-    public void downloadTorrent(String session, String path, AsyncCallback<Integer> callback);
+    void downloadTorrent(String session, String path, AsyncCallback<Integer> callback);
 
-    public void downloadTorrent(String session, int friendConnection, int channelId,
-            String torrentId, int lengthHint, AsyncCallback<Integer> callback);
+    void downloadTorrent(String session, int friendConnection, int channelId, String torrentId,
+            int lengthHint, AsyncCallback<Integer> callback);
 
-    public void addDownloadFromLocalTorrentDefaultSaveLocation(String session,
-            String inPathToTorrent, ArrayList<PermissionsGroup> inPermissions,
-            AsyncCallback<Void> callback);
+    void addDownloadFromLocalTorrentDefaultSaveLocation(String session, String inPathToTorrent,
+            ArrayList<PermissionsGroup> inPermissions, AsyncCallback<Void> callback);
 
-    // public void addDownloadFromLocalTorrent(String session, String path,
+    // void addDownloadFromLocalTorrent(String session, String path,
     // String savePath, boolean skipCheck, ArrayList<PermissionsGroup>
     // inPermissions,
     // AsyncCallback<Void> callback);
 
-    public void getTorrentDownloadProgress(String session, int torrentDownloadID,
+    void getTorrentDownloadProgress(String session, int torrentDownloadID,
             AsyncCallback<Integer> callback);
 
-    public void getTorrentFiles(String session, int torrentDownloadID,
+    void getTorrentFiles(String session, int torrentDownloadID,
             AsyncCallback<FileListLite[]> callback);
 
-    public void getTorrentName(String session, int inID, AsyncCallback<String> callback);
+    void getTorrentName(String session, int inID, AsyncCallback<String> callback);
 
-    public void addTorrent(String session, int torrentDownloadID, FileListLite[] selectedFiles,
+    void addTorrent(String session, int torrentDownloadID, FileListLite[] selectedFiles,
             ArrayList<PermissionsGroup> inPerms, String path, boolean noStream,
             AsyncCallback<Boolean> callback);
 
-    public void torrentExists(String session, String torrentID, AsyncCallback<Boolean> callback);
+    void torrentExists(String session, String torrentID, AsyncCallback<Boolean> callback);
 
-    public void deleteData(String session, String[] torrentID, AsyncCallback<Boolean> callback);
+    void deleteData(String session, String[] torrentID, AsyncCallback<Boolean> callback);
 
-    public void deleteFromShareKeepData(String session, String[] torrentID,
+    void deleteFromShareKeepData(String session, String[] torrentID,
             AsyncCallback<ReportableException> callback);
 
-    public void deleteCompletely(String session, String[] torrentID,
+    void deleteCompletely(String session, String[] torrentID,
             AsyncCallback<ReportableException> callback);
 
-    public void addFriend(String session, FriendInfoLite friendInfoLite, boolean testOnly,
+    void addFriend(String session, FriendInfoLite friendInfoLite, boolean testOnly,
             AsyncCallback<Void> callback);
 
-    public void scanXMLForFriends(String session, String text,
-            AsyncCallback<FriendInfoLite[]> callback);
+    void scanXMLForFriends(String session, String text, AsyncCallback<FriendInfoLite[]> callback);
 
-    public void applySwarmPermissionChanges(String session, ArrayList<TorrentInfo> inSwarms,
+    void applySwarmPermissionChanges(String session, ArrayList<TorrentInfo> inSwarms,
             AsyncCallback<Void> callback);
 
-    public void getFriends(String session, int prevListId, boolean includeDisconnected,
+    void getFriends(String session, int prevListId, boolean includeDisconnected,
             boolean includeBlocked, AsyncCallback<FriendList> callback);
 
-    public void getMyPublicKey(String session, AsyncCallback<String> callback);
+    void getMyPublicKey(String session, AsyncCallback<String> callback);
 
-    public void getFileList(String session, int connectionId, String filter, int startNum, int num,
+    void getFileList(String session, int connectionId, String filter, int startNum, int num,
             long maxCacheAge, AsyncCallback<FileListLite[]> callback);
 
-    public void sendSearch(String session, String searchString, AsyncCallback<Integer> callback);
+    void sendSearch(String session, String searchString, AsyncCallback<Integer> callback);
 
-    public void revealSwarmInFinder(String session, TorrentInfo[] inSwarm,
+    void revealSwarmInFinder(String session, TorrentInfo[] inSwarm,
             AsyncCallback<ReportableException> callback);
 
-    // public void revealPathInFinder(String session, String path, AsyncCallback
+    // void revealPathInFinder(String session, String path, AsyncCallback
     // callback);
 
-    public void openFileDefaultApp(String session, TorrentInfo[] inSwarm,
+    void openFileDefaultApp(String session, TorrentInfo[] inSwarm,
             AsyncCallback<ReportableException> callback);
 
-    public void getSearchResult(String session, int searchId,
+    void getSearchResult(String session, int searchId,
             AsyncCallback<TextSearchResultLite[]> callback);
 
-    public void getFiles(String session, String path, AsyncCallback callback);
+    void getFiles(String session, String path, AsyncCallback callback);
 
-    public void getFriendTransferStats(String session,
+    void getFriendTransferStats(String session,
             AsyncCallback<ArrayList<HashMap<String, String>>> callback);
 
-    public void setFriendsSettings(String session, FriendInfoLite[] updated,
-            AsyncCallback<Void> callback);
+    void setFriendsSettings(String session, FriendInfoLite[] updated, AsyncCallback<Void> callback);
 
-    public void getPendingCommunityFriendImports(String session, AsyncCallback<FriendList> callback);
+    void getPendingCommunityFriendImports(String session, AsyncCallback<FriendList> callback);
 
-    public void getNewUsersFromXMPP(String session, String xmppNetworkName, String username,
+    void getNewUsersFromXMPP(String session, String xmppNetworkName, String username,
             char[] password, String machineName, AsyncCallback<FriendInfoLite[]> callback);
 
-    public void pollCommunityServer(String session, CommunityRecord record,
-            AsyncCallback<Integer> callback);
+    void pollCommunityServer(String session, CommunityRecord record, AsyncCallback<Integer> callback);
 
-    public void getTorrentsState(String session, AsyncCallback<HashMap<String, Integer>> callback);
+    void getTorrentsState(String session, AsyncCallback<HashMap<String, Integer>> callback);
 
-    public void getComputerName(String session, AsyncCallback<String> callback);
+    void getComputerName(String session, AsyncCallback<String> callback);
 
-    public void setComputerName(String session, String computerName, AsyncCallback<Void> callback);
+    void setComputerName(String session, String computerName, AsyncCallback<Void> callback);
 
-    public void pagedTorrentStateRefresh(String session, ArrayList<String> whichOnes,
+    void pagedTorrentStateRefresh(String session, ArrayList<String> whichOnes,
             AsyncCallback<TorrentInfo[]> callback);
 
-    public void getIntegerParameterValue(String session, String inParamName,
+    void getIntegerParameterValue(String session, String inParamName,
             AsyncCallback<Integer> callback);
 
-    public void setIntegerParameterValue(String session, String inParamName, Integer inValue,
+    void setIntegerParameterValue(String session, String inParamName, Integer inValue,
             AsyncCallback<Void> callback);
 
-    public void getBooleanParameterValue(String session, String inParamName,
+    void getBooleanParameterValue(String session, String inParamName,
             AsyncCallback<Boolean> callback);
 
-    public void setBooleanParameterValue(String session, String inParamName, Boolean inValue,
+    void setBooleanParameterValue(String session, String inParamName, Boolean inValue,
             AsyncCallback<Void> callback);
 
-    public void getStringParameterValue(String session, String inParamName,
-            AsyncCallback<String> callback);
+    void getStringParameterValue(String session, String inParamName, AsyncCallback<String> callback);
 
-    public void setStringParameterValue(String session, String inParamName, String inValue,
+    void setStringParameterValue(String session, String inParamName, String inValue,
             AsyncCallback<Void> callback);
 
-    public void getStringListParameterValue(String session, String inParamName,
+    void getStringListParameterValue(String session, String inParamName,
             AsyncCallback<ArrayList<String>> callback);
 
-    public void setStringListParameterValue(String session, String inParamName,
-            ArrayList<String> value, AsyncCallback<Void> callback);
+    void setStringListParameterValue(String session, String inParamName, ArrayList<String> value,
+            AsyncCallback<Void> callback);
 
-    public void getDownloadManagersCount(String session, AsyncCallback<Integer> callback);
+    void getDownloadManagersCount(String session, AsyncCallback<Integer> callback);
 
-    public void getPagedAndFilteredSwarms(int inPage, int swarmsPerPage, String filter, int sort,
+    void getPagedAndFilteredSwarms(int inPage, int swarmsPerPage, String filter, int sort,
             String type, boolean includeF2F, int inSelectedFriendID, String inTagPath,
             AsyncCallback<PagedTorrentInfo> callback);
 
-    public void getFilesForDownloadingTorrentHash(String session, String inOneSwarmHash,
+    void getFilesForDownloadingTorrentHash(String session, String inOneSwarmHash,
             AsyncCallback<FileListLite[]> callback);
 
-    public void updateSkippedFiles(String session, FileListLite[] lites,
+    void updateSkippedFiles(String session, FileListLite[] lites,
             AsyncCallback<ReportableException> callback);
 
-    public void getAllGroups(String session, AsyncCallback<ArrayList<PermissionsGroup>> callback);
+    void getAllGroups(String session, AsyncCallback<ArrayList<PermissionsGroup>> callback);
 
-    public void getFriendsForGroup(String session, PermissionsGroup inGroup,
+    void getFriendsForGroup(String session, PermissionsGroup inGroup,
             AsyncCallback<ArrayList<FriendInfoLite>> callback);
 
-    public void getGroupsForSwarm(String session, TorrentInfo inSwarm,
+    void getGroupsForSwarm(String session, TorrentInfo inSwarm,
             AsyncCallback<ArrayList<PermissionsGroup>> callback);
 
-    public void setGroupsForSwarm(String session, TorrentInfo inSwarm,
+    void setGroupsForSwarm(String session, TorrentInfo inSwarm,
             ArrayList<PermissionsGroup> inGroups, AsyncCallback<ReportableException> callback);
 
-    public void updateGroupMembership(String session, PermissionsGroup inGroup,
+    void updateGroupMembership(String session, PermissionsGroup inGroup,
             ArrayList<FriendInfoLite> inMembers, AsyncCallback<PermissionsGroup> callback);
 
-    public void removeGroup(String session, Long inGroupID,
-            AsyncCallback<ReportableException> callback);
+    void removeGroup(String session, Long inGroupID, AsyncCallback<ReportableException> callback);
 
-    public void connectToFriends(String session, FriendInfoLite[] friendLite,
-            AsyncCallback<Void> callback);
+    void connectToFriends(String session, FriendInfoLite[] friendLite, AsyncCallback<Void> callback);
 
-    public void getUpdatedFriendInfo(String session, FriendInfoLite friendLite,
+    void getUpdatedFriendInfo(String session, FriendInfoLite friendLite,
             AsyncCallback<FriendInfoLite> callback);
 
-    public void getBackendTasks(String session, AsyncCallback<BackendTask[]> callback);
+    void getBackendTasks(String session, AsyncCallback<BackendTask[]> callback);
 
-    public void getBackendTask(String session, int inID, AsyncCallback<BackendTask> callback);
+    void getBackendTask(String session, int inID, AsyncCallback<BackendTask> callback);
 
-    public void cancelBackendTask(String session, int inID, AsyncCallback<Void> callback);
+    void cancelBackendTask(String session, int inID, AsyncCallback<Void> callback);
 
-    public void debug(String session, String which, AsyncCallback<String> callback);
+    void debug(String session, String which, AsyncCallback<String> callback);
 
-    public void getLanOneSwarmUsers(String session, AsyncCallback<FriendInfoLite[]> callback);
+    void getLanOneSwarmUsers(String session, AsyncCallback<FriendInfoLite[]> callback);
 
-    public void getRemoteAccessUserName(String session, AsyncCallback<String> callback);
+    void getRemoteAccessUserName(String session, AsyncCallback<String> callback);
 
-    public void saveRemoteAccessCredentials(String session, String username, String password,
+    void saveRemoteAccessCredentials(String session, String username, String password,
             AsyncCallback<String> callback);
 
-    public void getListenAddresses(String session, AsyncCallback<String[]> asyncCallback);
+    void getListenAddresses(String session, AsyncCallback<String[]> asyncCallback);
 
-    public void getNewFriendsCountsFromAutoCheck(String session,
+    void getNewFriendsCountsFromAutoCheck(String session,
             AsyncCallback<HashMap<String, Integer>> callback);
 
-    public void getDeniedIncomingConnections(String session,
+    void getDeniedIncomingConnections(String session,
             AsyncCallback<HashMap<String, String>> callback);
 
-    public void getPlatform(String session, AsyncCallback<String> callback);
+    void getPlatform(String session, AsyncCallback<String> callback);
 
-    public void deleteFriends(String session, FriendInfoLite[] friend, AsyncCallback<Void> callback);
+    void deleteFriends(String session, FriendInfoLite[] friend, AsyncCallback<Void> callback);
 
-    public void addToIgnoreRequestList(String session, FriendInfoLite friend,
-            AsyncCallback<Void> callback);
+    void addToIgnoreRequestList(String session, FriendInfoLite friend, AsyncCallback<Void> callback);
 
-    public void getGtalkStatus(String session, AsyncCallback<String> callback);
+    void getGtalkStatus(String session, AsyncCallback<String> callback);
 
-    public void getAllTags(String session, AsyncCallback<FileTree> callback);
+    void getAllTags(String session, AsyncCallback<FileTree> callback);
 
-    public void getTags(String session, String inOneSwarmHash, AsyncCallback<FileTree> callback);
+    void getTags(String session, String inOneSwarmHash, AsyncCallback<FileTree> callback);
 
-    public void setTags(String session, String inOneSwarmHash, String[] path,
-            AsyncCallback<Void> callback);
+    void setTags(String session, String inOneSwarmHash, String[] path, AsyncCallback<Void> callback);
 
-    public void getSelf(String session, AsyncCallback<FriendInfoLite> callback);
+    void getSelf(String session, AsyncCallback<FriendInfoLite> callback);
 
-    public void getUsersWithMessages(String session,
-            AsyncCallback<HashMap<String, String[]>> callback);
+    void getUsersWithMessages(String session, AsyncCallback<HashMap<String, String[]>> callback);
 
-    public void getUnreadMessageCounts(String session,
-            AsyncCallback<HashMap<String, Integer>> callback);
+    void getUnreadMessageCounts(String session, AsyncCallback<HashMap<String, Integer>> callback);
 
-    public void getMessagesForUser(String session, String base64PublicKey, boolean include_read,
-            int limit, AsyncCallback<SerialChatMessage[]> callback);
+    void getMessagesForUser(String session, String base64Key, boolean include_read, int limit,
+            AsyncCallback<SerialChatMessage[]> callback);
 
-    public void sendChatMessage(String session, String base64PublicKey, SerialChatMessage message,
+    void sendChatMessage(String session, String base64Key, SerialChatMessage message,
             AsyncCallback<Boolean> callback);
 
-    public void clearChatLog(String session, String base64PublicKey, AsyncCallback<Integer> callback);
+    void clearChatLog(String session, String base64Key, AsyncCallback<Integer> callback);
 
-    public void updateRemoteAccessIpFilter(String session, String selectedFilterType,
-            String filterString, AsyncCallback<Void> callback);
-
-    public void getBackendErrors(String session,
-            AsyncCallback<ArrayList<BackendErrorReport>> callback);
-
-    public void getDebugMessageLog(String session, String friendPublicKey,
-            AsyncCallback<String> callback);
-
-    public void getBase64HashesForOneSwarmHashes(String session, String[] inOneSwarmHashes,
-            AsyncCallback<String[]> callback);
-
-    public void getBase64HashesForBase32s(String session, String[] inBase32s,
-            AsyncCallback<String[]> callback);
-
-    public void createInvitation(String session, String name, boolean canSeeFileList, long maxAge,
-            SecurityLevel securityLevel, AsyncCallback<FriendInvitationLite> callback);
-
-    public void redeemInvitation(String session, FriendInvitationLite invitation, boolean testOnly,
+    void updateRemoteAccessIpFilter(String session, String selectedFilterType, String filterString,
             AsyncCallback<Void> callback);
 
-    public void getSentFriendInvitations(String session,
+    void getBackendErrors(String session, AsyncCallback<ArrayList<BackendErrorReport>> callback);
+
+    void getDebugMessageLog(String session, String friendKey, AsyncCallback<String> callback);
+
+    void getBase64HashesForOneSwarmHashes(String session, String[] inOneSwarmHashes,
+            AsyncCallback<String[]> callback);
+
+    void getBase64HashesForBase32s(String session, String[] inBase32s,
+            AsyncCallback<String[]> callback);
+
+    void createInvitation(String session, String name, boolean canSeeFileList, long maxAge,
+            SecurityLevel securityLevel, AsyncCallback<FriendInvitationLite> callback);
+
+    void redeemInvitation(String session, FriendInvitationLite invitation, boolean testOnly,
+            AsyncCallback<Void> callback);
+
+    void getSentFriendInvitations(String session,
             AsyncCallback<ArrayList<FriendInvitationLite>> callback);
 
-    public void getRedeemedFriendInvitations(String session,
+    void getRedeemedFriendInvitations(String session,
             AsyncCallback<ArrayList<FriendInvitationLite>> callback);
 
-    public void updateFriendInvitations(String sessionID, FriendInvitationLite invitation,
+    void updateFriendInvitations(String sessionID, FriendInvitationLite invitation,
             AsyncCallback<Void> asyncCallback);
 
-    public void deleteFriendInvitations(String sessionID,
-            ArrayList<FriendInvitationLite> invitations, AsyncCallback<Void> asyncCallback);
+    void deleteFriendInvitations(String sessionID, ArrayList<FriendInvitationLite> invitations,
+            AsyncCallback<Void> asyncCallback);
 
-    public void copyTorrentInfoToMagnetLink(String sessionID, String[] torrentIDs,
+    void copyTorrentInfoToMagnetLink(String sessionID, String[] torrentIDs,
             AsyncCallback<String> asyncCallback);
 
-    public void refreshFileAssociations(String session, AsyncCallback<Void> callback);
+    void refreshFileAssociations(String session, AsyncCallback<Void> callback);
 
-    public void getLocales(String session, AsyncCallback<LocaleLite[]> callback);
+    void getLocales(String session, AsyncCallback<LocaleLite[]> callback);
 
-    public void getFileInfo(String session, FileListLite file, boolean getMediaInfo,
+    void getFileInfo(String session, FileListLite file, boolean getMediaInfo,
             AsyncCallback<HashMap<String, String>> callback);
 
-    public void performSpeedCheck(String session, double setWithFraction,
+    void performSpeedCheck(String session, double setWithFraction,
             AsyncCallback<BackendTask> callback);
 
     void applyDefaultSettings(String session, AsyncCallback<Void> callback);
 
-    public void getNumberFriendsCount(String session, AsyncCallback<Integer> callback);
+    void getNumberFriendsCount(String session, AsyncCallback<Integer> callback);
 
     void getNumberOnlineFriends(String session, AsyncCallback<Integer> callback);
 
@@ -311,14 +298,14 @@ public interface OneSwarmUIServiceAsync {
             String[] comments, String[] categories, CommunityRecord toServer,
             AsyncCallback<BackendTask> callback);
 
-    public void getCategoriesForCommunityServer(String sessionID, CommunityRecord selected,
+    void getCategoriesForCommunityServer(String sessionID, CommunityRecord selected,
             AsyncCallback<ArrayList<String>> asyncCallback);
 
     void triggerNatCheck(String sessionID, AsyncCallback<Void> callback);
 
     void getNatCheckResult(String sessionID, AsyncCallback<HashMap<String, String>> callback);
 
-    public void fixPermissions(String sessionID, TorrentInfo torrent, boolean inFixAll,
+    void fixPermissions(String sessionID, TorrentInfo torrent, boolean inFixAll,
             AsyncCallback<Void> asyncCallback);
 
     void isStreamingDownload(String session, String infohash, AsyncCallback<Boolean> callback);
@@ -328,15 +315,13 @@ public interface OneSwarmUIServiceAsync {
 
     void getMultiTorrentSourceTemp(String session, AsyncCallback<String> callback);
 
-    void getClientServices(AsyncCallback<ArrayList<ClientServiceDTO>> callback);
+    void listFiles(String session, String string, AsyncCallback<FileInfo[]> callback);
 
-    void getSharedServices(AsyncCallback<ArrayList<SharedServiceDTO>> callback);
+    void getClientServices(String session, AsyncCallback<ClientServiceInfo[]> callback);
 
-    void saveClientServices(ArrayList<ClientServiceDTO> services, AsyncCallback<Void> callback);
+    void addClientService(String sessionID, long id, String name, AsyncCallback<Void> callback);
 
-    void saveSharedServices(ArrayList<SharedServiceDTO> services, AsyncCallback<Void> callback);
+    void removeClientService(String session, long id, AsyncCallback<Void> callback);
 
-	void listFiles(String session, String string, AsyncCallback<FileInfo[]> callback);
-
-
+    void activateClientService(String session, String name, long id, AsyncCallback<String> callback);
 }

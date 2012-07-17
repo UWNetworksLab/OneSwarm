@@ -170,7 +170,7 @@ public class SettingsDialog extends OneSwarmDialogBox {
         mTabs.setWidth("100%");
         mTabs.setHeight("100%");
 
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
 
         settingsPanels.add(save_loc);

@@ -327,9 +327,8 @@ table.gwt-DecoratedTabPanel.os-f2f_tabs table.gwt-DecoratedTabBar .gwt-Label
 	border-bottom: 1px solid #8da0b1;
 }
 
+//TODO (nick) remove
 .os-browser_header_buttons .gwt-ListBox {
-	/* it would be nice if we could increase the font size here... */
-	
 }
 
 .os-torrent-list-corners {
@@ -462,7 +461,7 @@ div#os-no_files_label {
 }
 
 /*
- * Override GWT default since we muck around with everything
+ * Override GWT defaults since we muck around with everything
  */
 .gwt-DialogBox .Caption {
 	background: None;
@@ -475,12 +474,18 @@ div#os-no_files_label {
 .gwt-DialogBox .Top .Caption {
 	cursor: default;
 	overflow: hidden;
-	padding: 0px 0px 0px 0px;
+	padding: 0px;
 	border-top: 0px;
 	font-weight: bold;
 	border-bottom: None;
 	border-top: None;
 	background-color: transparent;
+}
+
+.gwt-DisclosurePanel .content {
+	border-left: 0px;
+	padding: 0px;
+	margin-left: 0px;
 }
 
 .os-ErrorBox {
@@ -515,22 +520,6 @@ div#os-no_files_label {
 	padding: 0px;
 }
 
-/*
-.gwt-MenuBar {
-	background-color: #C3D9FF;
-	cursor: default;
-}
-
-.gwt-MenuBar .gwt-MenuItem {
-	padding: 1px 4px 1px 4px;
-	font-size: smaller;
-	cursor: default;
-}
-
-.gwt-MenuBar .gwt-MenuItem-selected {
-	background-color: #E8EEF7;
-}
-*/
 .os-addDownloadLink {
 	background-color: #FFFFFF;
 	width: 180px;
@@ -554,32 +543,68 @@ div#os-no_files_label {
 	padding-left: 5px;
 }
 
-.os-categoryLink a {
-	font-size: 12pt;
+
+/* OneSwarmCss.SidebarWidget */
+.os-sidebar_widget_main_panel {
+	margin-top: 5px;
+	width: 170px;
+	border: 2px solid #C3D9FF;
+}
+
+.os-sidebar_widget_main_panel.gwt-DisclosurePanel .header {
+	font-family: arial;
+	color: blue;
+	cursor: pointer;
+	font-size: 12px;
+	width: 170px;
+	background-color: #C3D9FF;
+	font-size: 100%;
 	text-align: left;
 }
 
-.os-categoryLinkCorners {
-	background-color: #FFFFFF;
-	border-color: #FFFFFF;
+.os-sidebar_widget_main_panel.gwt-DisclosurePanel .header td {
+	color: #0000AA;
 }
 
-.os-categoryLink-selected {
-	background-color: #B3CBE2;
-	border-color: #B3CBE2;
+.os-sidebar_widget_selected_item {
+	background-color: #c0ccff;
 }
 
-.os-navpanel {
+.os-sidebar_widget_footer_menu_bar {
+	border: 0px;
+	text-decoration: underline;
+	text-align: center;
+	color: #0000cc;
+}
+
+.os-sidebar_widget_footer_menu_item {
+	text-decoration: underline;
+	text-align: center;
+	font-size: 90%;
+	width: 170px;
+	color: #0000cc;
+	cursor: pointer;
+}
+
+
+/* OneSwarmCss.SidebarBase */
+.os-sidebar_main_vertical_panel {
 	padding-left: 10px;
 	width: 200px;
 	padding-top: 23px;
 }
 
-.os-categoryLinkCorners-selected {
-	background-color: #B3CBE2;
+.os-sidebar_link a {
+	font-size: 12pt;
+	text-align: left;
 }
 
-.os-sidebar_stats {
+.os-sidebar_selected_item *{
+	background-color: #B3CBE2;
+	border-color: #B3CBE2;
+}
+
+.os-sidebar_stats_text {
 	text-align: left;
 }
 
@@ -589,21 +614,16 @@ div#os-no_files_label {
 	margin-top: 3px;
 }
 
+/* End OneSwarmCss.java mapped css */
+
 .os-categoryList {
 	width: 180px;
 }
 
 os-friendPanel {
 	padding-top: 20px;
-	/*	width: 180px;
-	padding-left: 10px;*/
 }
 
-.os-friendList {
-	margin-top: 5px;
-	width: 170px;
-	border: 2px solid #C3D9FF;
-}
 
 .os-friendList .header td {
 	color: #0000AA;
@@ -618,9 +638,6 @@ os-friendPanel {
 	background-color: #C3D9FF;
 	font-size: 100%;
 	text-align: left;
-	/*	text-decoration: none;
-	font-size: 90%;
-	text-align: left; */
 }
 
 .os-friendInviteSide {
@@ -632,68 +649,14 @@ os-friendPanel {
 	padding-left: 2px;
 }
 
-.os-friendInviteSidePanel {
-	width: 170px;
-	border: 2px solid #C3D9FF;
-}
-
-.os-friendInviteSidePanel .header td {
-	color: #0000AA;
-}
-
-.os-friendInviteSidePanel .header {
-	font-family: arial;
-	color: blue;
-	cursor: pointer;
-	font-size: 12px;
-	width: 170px;
-	background-color: #C3D9FF;
-	font-size: 100%;
-	text-align: left;
-	/*	text-decoration: none;
-	font-size: 90%;
-	text-align: left; */
-}
-
 .os-friendListRequestPanel {
 	border-bottom: 4px solid #C3D9FF;
 	padding-bottom: 2px;
 	cursor: pointer;
-	/*background-color: #C3D9FF;*/
 }
 
-.os-friendListRequestPadding { /* border-bottom: 4px solid #C3D9FF; */
+.os-friendListRequestPadding {
 	padding-bottom: 10px;
-	/*background-color: #C3D9FF;*/
-}
-
-.os-friendListFooter {
-	border: 0px;
-	text-decoration: underline;
-	text-align: center;
-	color: #0000cc;
-}
-
-.os-friendListFooterMenu {
-	text-decoration: underline;
-	text-align: center;
-	font-size: 90%;
-	width: 160px;
-	color: #0000cc;
-	cursor: pointer;
-}
-
-/*table td {
-  color: #0000AA;
-}*/
-.os-navpanel .gwt-DisclosurePanel .content {
-	border-left: 0px solid #e8eef7;
-	padding: 0px 0px 0px 0px;
-	margin-left: 0px;
-}
-
-.os-friend_highlight {
-	background-color: #c0ccff;
 }
 
 .os-group_panel_header {
@@ -802,77 +765,10 @@ os-friendPanel {
 	font-weight: bold;
 }
 
-/* GWT File Browser */
+.os-invalid_form_entry {
+	border: 2px solid red;
+}
+
 .fileBrowserPopup {
 	z-index: 2000 !important;
 }
-
-/**
- * ScrollTable
- 
-.gwt-ScrollTable {
-	border-color: #aaa;
-	border-style: solid;
-	border-width: 1px 0px 1px 1px;
-}
-
-.gwt-ScrollTable .gwt-ScrollTable-header-wrapper {
-	background: #8bd url(bg_header_gradient.gif) repeat-x bottom left;
-}
-
-.gwt-ScrollTable .gwt-ScrollTable-footer-wrapper {
-	border-top: 1px solid #aaa;
-	background: #8bd url(bg_header_gradient.gif) repeat-x bottom left;
-}
-
-.gwt-ScrollTable .gwt-ScrollTable-data td,.gwt-ScrollTable .gwt-ScrollTable-header td,.gwt-ScrollTable .gwt-ScrollTable-footer td
-	{
-	border-color: #aaa;
-	border-style: solid;
-	border-width: 0px 1px 1px 0px;
-	white-space: nowrap;
-	overflow: hidden;
-	padding: 3px;
-}
-
-.gwt-ScrollTable .gwt-ScrollTable-header td,.gwt-ScrollTable .gwt-ScrollTable-footer td
-	{
-	color: #fff;
-}
-
-.gwt-ScrollTable .gwt-ScrollTable-data tr.hovering {
-	background: #C3D9FF;
-}
-
-.gwt-ScrollTable .gwt-ScrollTable-data td.hovering {
-	border: 1px solid blue;
-	cursor: hand;
-	cursor: pointer;
-}
-
-.gwt-ScrollTable .gwt-ScrollTable-data tr.selected {
-	background: #7AA5D6;
-}
-
-.gwt-ScrollTable .pagingOptions {
-	background: #e8eef7;
-	border-top: 1px solid #aaa;
-	border-right: 1px solid #aaa;
-	padding: 1px 0px;
-}
-
-.gwt-ScrollTable .pagingOptions .errorLabel {
-	color: red;
-}
-
-.gwt-CellEditor {
-	border: 3px solid #7AA5D6;
-	padding: 4px;
-	background: white;
-}
-
-.gwt-CellEditor td {
-	padding: 4px;
-}
-
-*/

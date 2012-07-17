@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.filebrowser.TorrentDownloaderDialog;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.permissions.groups.GroupsManagementTab;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.permissions.swarms.SwarmPermissionsTab;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.TorrentInfo;
@@ -49,7 +50,7 @@ public class SwarmPermissionsDialog extends OneSwarmDialogBox {
 
         VerticalPanel mainPanel = new VerticalPanel();
 
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         mainPanel.setHeight(HEIGHT + "px");
         mainPanel.add(selectLabel);

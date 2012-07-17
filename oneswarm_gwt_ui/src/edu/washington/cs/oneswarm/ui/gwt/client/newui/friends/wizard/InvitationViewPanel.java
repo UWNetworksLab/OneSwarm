@@ -31,6 +31,7 @@ import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmGWT;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.HelpButton;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInvitationLite;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.StringTools;
 
@@ -60,7 +61,7 @@ public class InvitationViewPanel extends FriendsImportWithBack {
              */
 
             Label sentLabel = new HTML(msg.add_friends_invite_view_sent_HTML());
-            sentLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+            sentLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
             sentLabel.setWidth(WIDTH + "px");
             this.add(sentLabel);
             sentTablePanel.setWidth(WIDTH + "px");
@@ -69,7 +70,7 @@ public class InvitationViewPanel extends FriendsImportWithBack {
              * The table for redeemed invitations
              */
             Label redeemedLabel = new HTML(msg.add_friends_invite_view_redeemed_HTML());
-            redeemedLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+            redeemedLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
             redeemedLabel.setWidth(WIDTH + "px");
             this.add(redeemedLabel);
             redeemedTablePanel.setWidth(WIDTH + "px");
@@ -443,7 +444,7 @@ public class InvitationViewPanel extends FriendsImportWithBack {
                  * invitation key
                  */
                 HTML invitationLabel = new HTML(msg.add_friends_invite_view_invitation_key());
-                invitationLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+                invitationLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
                 invitationLabel.setWidth(WIDTH + "px");
                 this.add(invitationLabel);
 

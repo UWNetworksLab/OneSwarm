@@ -31,6 +31,7 @@ import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.EntireUIRoot;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.ImageConstants;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.settings.SettingsDialog;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.BackendTask;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.CommunityRecord;
@@ -67,7 +68,7 @@ public class PublishSwarmsDialog extends OneSwarmDialogBox implements ClickHandl
         setText(msg.publish_title());
 
         Label selectLabel = new Label(msg.publish_help());
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         mainPanel.add(selectLabel);
         mainPanel.setCellVerticalAlignment(selectLabel, VerticalPanel.ALIGN_TOP);

@@ -663,7 +663,7 @@ public class TorrentDownloaderDialog extends OneSwarmDialogBox implements Update
             final VerticalPanel mainPanel = new VerticalPanel();
 
             selectLabel = new Label(msg.torrent_download_header());
-            selectLabel.addStyleName(CSS_DIALOG_HEADER);
+            selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
             selectLabel.setWidth(WIDTH + "px");
             mainPanel.add(selectLabel);
 

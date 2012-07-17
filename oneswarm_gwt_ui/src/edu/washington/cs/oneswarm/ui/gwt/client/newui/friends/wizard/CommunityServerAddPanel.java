@@ -22,6 +22,7 @@ import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmGWT;
 import edu.washington.cs.oneswarm.ui.gwt.client.i18n.OSMessages;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.HelpButton;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.CommunityRecord;
 
 public class CommunityServerAddPanel extends VerticalPanel {
@@ -144,7 +145,7 @@ public class CommunityServerAddPanel extends VerticalPanel {
         allowAddressResolution.setValue(allowAddressResolveDefault);
 
         l = new Label(msg.add_community_prompt());
-        l.addStyleName(OneSwarmDialogBox.CSS_DIALOG_HEADER);
+        l.addStyleName(OneSwarmCss.Dialog.HEADER);
         l.setWidth(WIDTH + "px");
         this.add(l);
         this.add(urlGrid);

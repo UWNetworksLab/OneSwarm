@@ -66,7 +66,7 @@ public class TagEditorDialog extends OneSwarmDialogBox {
 
         selectLabel = new Label("Editing tags for " + torrents.length + " selected swarm"
                 + (torrents.length > 1 ? "s" : ""));
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         mainPanel.add(selectLabel);
 

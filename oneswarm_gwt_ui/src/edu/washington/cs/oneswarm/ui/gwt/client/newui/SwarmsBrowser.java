@@ -124,11 +124,11 @@ public class SwarmsBrowser extends VerticalPanel implements Updateable {
 
     TransferDetailsTable transferDetailsTable = null;
 
-    HTML allFilesFiltered = new HTML("<div id=\"" + OneSwarmCss.CSS_NOTHING_SHOWING + "\">"
+    HTML allFilesFiltered = new HTML("<div id=\"" + OneSwarmCss.NO_FILES_LABEL + "\">"
             + msg.swarm_browser_no_files_search_friends_HMTL("") + "</a></div>");
-    HTML noFilesHTML = new HTML("<div id=\"" + OneSwarmCss.CSS_NOTHING_SHOWING + "\">"
+    HTML noFilesHTML = new HTML("<div id=\"" + OneSwarmCss.NO_FILES_LABEL + "\">"
             + Strings.get(Strings.NO_FILES_MESSAGE) + "</div>");
-    HTML noFriendsFilesHTML = new HTML("<div id=\"" + OneSwarmCss.CSS_NOTHING_SHOWING + "\">"
+    HTML noFriendsFilesHTML = new HTML("<div id=\"" + OneSwarmCss.NO_FILES_LABEL + "\">"
             + msg.swarm_browser_no_files_shared() + "</div>");
     Widget welcomePanel = new NewUserSetupPanel(this);
     /**
@@ -1200,7 +1200,7 @@ public class SwarmsBrowser extends VerticalPanel implements Updateable {
                         if (mFilterPattern != null && mFilterPattern.length() > 0) {
                             filterEnabled = true;
                             allFilesFiltered.setHTML("<div id=\""
-                                    + OneSwarmCss.CSS_NOTHING_SHOWING
+                                    + OneSwarmCss.NO_FILES_LABEL
                                     + "\">"
                                     + msg.swarm_browser_no_files_search_friends_HMTL(mFilterPattern)
                                     + "</a></div>");

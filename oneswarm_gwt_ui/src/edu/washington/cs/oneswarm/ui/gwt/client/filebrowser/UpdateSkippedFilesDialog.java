@@ -206,7 +206,7 @@ public class UpdateSkippedFilesDialog extends OneSwarmDialogBox {
         VerticalPanel filesPanel = new VerticalPanel();
 
         Label selectLabel = new Label(msg.update_files_banner());
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
         mainPanel.add(selectLabel);
 

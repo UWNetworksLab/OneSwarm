@@ -141,6 +141,10 @@ public class ClientService implements RoutingListener, Comparable<ClientService>
         int port = COConfigurationManager.getIntParameter(getPortKey(), -1);
         return port;
     }
+    
+    public long getServerSeachKey(){
+        return serverSearchKey;
+    }
 
     private String getPortKey() {
         return CONFIGURATION_PREFIX + serverSearchKey + "_port";

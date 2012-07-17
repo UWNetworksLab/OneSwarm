@@ -222,7 +222,7 @@ class RemoteAccessPanel extends SettingsPanel {
             setText(msg.settings_net_remote_access_advanced());
 
             Label selectLabel = new Label(msg.settings_net_remote_access_ip_limit());
-            selectLabel.addStyleName(CSS_DIALOG_HEADER);
+            selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
             selectLabel.setWidth(WIDTH + "px");
 
             VerticalPanel panel = new VerticalPanel();

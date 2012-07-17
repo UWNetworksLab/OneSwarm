@@ -31,7 +31,7 @@ public class ComputerNameDialog extends OneSwarmDialogBox {
         setText(msg.settings_computer_name_header());
 
         Label selectLabel = new Label(msg.settings_computer_name_msg());
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
 
         mainPanel = new VerticalPanel();

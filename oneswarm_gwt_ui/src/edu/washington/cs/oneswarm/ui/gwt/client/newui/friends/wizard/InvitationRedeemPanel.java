@@ -19,6 +19,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.HelpButton;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInvitationLite;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmConstants.SecurityLevel;
 
@@ -53,7 +54,7 @@ public class InvitationRedeemPanel extends FriendsImportWithBack {
              * step 1: friends name
              */
             Label selectLabel = new HTML(msg.add_friends_manual_step_1_type_nickname_HTML());
-            selectLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+            selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
             selectLabel.setWidth(WIDTH + "px");
             this.add(selectLabel);
 
@@ -86,7 +87,7 @@ public class InvitationRedeemPanel extends FriendsImportWithBack {
              * step 2: Invitation code
              */
             Label codeLabel = new HTML(msg.add_friends_invite_redeem_step2_enter_code_HTML());
-            codeLabel.addStyleName(FriendsImportWizard.CSS_DIALOG_HEADER);
+            codeLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
             codeLabel.setWidth(WIDTH + "px");
             this.add(codeLabel);
 

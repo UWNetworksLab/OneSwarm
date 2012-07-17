@@ -10,6 +10,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 
 public class VersionCheckAdvancedDialog extends OneSwarmDialogBox {
     private static final int WIDTH = 400;
@@ -25,7 +26,7 @@ public class VersionCheckAdvancedDialog extends OneSwarmDialogBox {
         setText(msg.settings_interface_version_check_advanced_header());
 
         Label selectLabel = new Label(msg.settings_interface_version_check_advanced_msg());
-        selectLabel.addStyleName(CSS_DIALOG_HEADER);
+        selectLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         selectLabel.setWidth(WIDTH + "px");
 
         VerticalPanel panel = new VerticalPanel();

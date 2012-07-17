@@ -15,6 +15,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.permissions.GroupsListSorter;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.permissions.MembershipList;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.permissions.MembershipListListener;
@@ -46,7 +47,7 @@ public class AprioriPermissionsDialog extends OneSwarmDialogBox {
         initial_groups = initialGroups;
 
         Label headerLabel = new Label(inHeader);
-        headerLabel.addStyleName(CSS_DIALOG_HEADER);
+        headerLabel.addStyleName(OneSwarmCss.Dialog.HEADER);
         headerLabel.setWidth(WIDTH + "px");
         mainPanel.add(headerLabel);
 
