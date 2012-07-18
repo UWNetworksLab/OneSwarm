@@ -15,8 +15,10 @@ import edu.washington.cs.oneswarm.test.util.TestUtils;
 import edu.washington.cs.oneswarm.test.util.TwoProcessTestBase;
 
 public class ChatTest extends TwoProcessTestBase {
-
     private static Logger logger = Logger.getLogger(ChatTest.class.getName());
+
+    private static final String FIRST_CHAT_FRIEND_XPATH = "//div[@class='os-friendListElement']";
+    private static final String CHAT_TEXT_BOX_XPATH = "//input[@id='chatTextBox']";
 
     @Test
     public void testSendReceiveChat() throws Exception {
@@ -33,19 +35,16 @@ public class ChatTest extends TwoProcessTestBase {
             selenium.selectWindow("jvm");
 
             // Wait for the friends list AJAX load to complete
-            TestUtils.awaitElement(selenium, "//td[2]/div/div");
-
-            // Double-click the first friend in the list, opens chat.
-            selenium.click("//td[2]/div/div");
-            selenium.click("//td[2]/div/div");
+            TestUtils.awaitElement(selenium, FIRST_CHAT_FRIEND_XPATH);
+            selenium.doubleClick(FIRST_CHAT_FRIEND_XPATH);
 
             // Send chat message
             final String chatMessage = "ChatMessage JVM to Local";
-            TestUtils.awaitElement(selenium, "chatTextBox");
-            selenium.focus("chatTextBox");
-            selenium.type("chatTextBox", chatMessage);
-            selenium.keyDown("chatTextBox", "\\13");
-            selenium.keyUp("chatTextBox", "\\13");
+            TestUtils.awaitElement(selenium, CHAT_TEXT_BOX_XPATH);
+            selenium.focus(CHAT_TEXT_BOX_XPATH);
+            selenium.type(CHAT_TEXT_BOX_XPATH, chatMessage);
+            selenium.keyDown(CHAT_TEXT_BOX_XPATH, "\\13");
+            selenium.keyUp(CHAT_TEXT_BOX_XPATH, "\\13");
 
             // Verify local display of the chat message.
             new ConditionWaiter(new ConditionWaiter.Predicate() {
