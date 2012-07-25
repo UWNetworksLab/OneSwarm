@@ -9,6 +9,8 @@ import com.allen_sauer.gwt.dnd.client.DragStartEvent;
 import com.allen_sauer.gwt.dnd.client.PickupDragController;
 import com.allen_sauer.gwt.dnd.client.VetoDragException;
 import com.allen_sauer.gwt.dnd.client.drop.DropController;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
@@ -21,7 +23,6 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.DecoratedTabPanel;
 import com.google.gwt.user.client.ui.DockPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
@@ -50,6 +51,7 @@ import edu.washington.cs.oneswarm.ui.gwt.rpc.StringTools;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.TorrentInfo;
 
 public class EntireUIRoot extends DockPanel {
+    private static EntireUIRoot entireUiRoot;
     private final NavigationSidePanel navSidePanel;
     SwarmsBrowser swarmFileBrowser = null;
     private Header header;
@@ -83,9 +85,9 @@ public class EntireUIRoot extends DockPanel {
              * We can't use the value provided by the event because of a firefox
              * decoding bug (we rely on encoded responses to make parsing
              */
-            String historyToken = getHistoryToken();
 
-            OneSwarmGWT.log("History value changed: " + historyToken);
+            boolean recognized = false;
+            String historyToken = getHistoryToken();
 
             if (historyToken.startsWith("cserver") == false
                     && swarmFileBrowser.isAttached() == false) {
@@ -95,8 +97,7 @@ public class EntireUIRoot extends DockPanel {
             }
 
             actionOccurred();
-            System.out.println("got history changed event: " + historyToken);
-            boolean recognized = false;
+
             for (FileTypeFilter filter : FileTypeFilter.values()) {
                 if (filter.history_state_name.equals(historyToken)) {
                     swarmFileBrowser.changeFilter(filter, false); // this will
@@ -141,7 +142,7 @@ public class EntireUIRoot extends DockPanel {
                 header.getFilterBar().setVisible(false);
 
                 CommunityRecord selectedServer = navSidePanel.getCommunityServersPanel()
-                        .getSelectedServer();
+                        .getSelected();
                 if (selectedServer == null) {
                     keyboardRecorder.add(new Label("No selected community server."));
                 } else {
@@ -306,6 +307,7 @@ public class EntireUIRoot extends DockPanel {
 
         }
         navSidePanel = new NavigationSidePanel();
+
         /**
          * Compensate for ScrollTable resizing bug in FireFox. See:
          * http://code.google
@@ -503,130 +505,20 @@ public class EntireUIRoot extends DockPanel {
     }
 
     private native void reload() /*-{
-                                 $wnd.location.reload();
-                                 }-*/;
+		$wnd.location.reload();
+    }-*/;
 
     /**
-     * We include this function from Google's RSH (reallysimplehistory) to work
-     * around a hash decoding bug in firefox. See:
+     * We include this function from Google's RSH (really simple history) to
+     * work around a hash decoding bug in Firefox. See:
      * https://bugzilla.mozilla.org/show_bug.cgi?id=378962
      * https://bugzilla.mozilla.org/show_bug.cgi?id=483304
      */
     private native String getHistoryToken() /*-{
-                                            var r = $wnd.location.href;
-                                            var i = r.indexOf("#");
-                                            return (i >= 0
-                                            ? r.substr(i+1)
-                                            : ""
-                                            );
-                                            }-*/;
-
-    // public void onHistoryChanged(String historyToken) {
-    //
-    // if (historyToken.equals("cserver") == false &&
-    // swarmFileBrowser.isAttached() == false) {
-    // keyboardRecorder.clear();
-    // keyboardRecorder.setWidget(swarmFileBrowser);
-    // header.getFilterBar().setVisible(true);
-    // }
-    //
-    // actionOccurred();
-    // System.out.println("got history changed event: " + historyToken);
-    // boolean recognized = false;
-    // for (FileTypeFilter filter : FileTypeFilter.values()) {
-    // if (filter.history_state_name.equals(historyToken)) {
-    // swarmFileBrowser.changeFilter(filter, false); // this will clear
-    // // the search
-    // // bar
-    // // logically. we
-    // // do this in
-    // // the UI below
-    // recognized = true;
-    // }
-    // }
-    //
-    // if (historyToken.equals(NavigationSidePanel.HYPERLINK_LABEL_TRANSFERS)) {
-    // System.out.println("show transfers");
-    // swarmFileBrowser.showTransfers();
-    // recognized = true;
-    // } else if
-    // (historyToken.equals(NavigationSidePanel.HYPERLINK_LABEL_FRIENDS)) {
-    // System.out.println("show friends");
-    // swarmFileBrowser.showFriends();
-    // recognized = true;
-    // } else if (historyToken.equals("friend")) {
-    // // internal file browser code will recognize that we have a friend
-    // // selected, this code will remove transfers (if selected)
-    // // and clear other state appropriate to the switch
-    // swarmFileBrowser.pageZero();
-    // swarmFileBrowser.changeFilter(FileTypeFilter.All, false);
-    //
-    // /**
-    // * Select browse files to see these since the intent is clearly to
-    // * view them
-    // */
-    // if (searchTabs != null) {
-    // searchTabs.selectTab(0);
-    // }
-    //
-    // recognized = true;
-    // } else if (historyToken.equals("cserver")) {
-    //
-    // keyboardRecorder.clear();
-    // header.getFilterBar().setVisible(false);
-    //
-    // CommunityRecord selectedServer =
-    // navSidePanel.getCommunityServersPanel().getSelectedServer();
-    // if (selectedServer == null) {
-    // keyboardRecorder.add(new Label("No selected community server."));
-    // } else {
-    //
-    // final Frame frame = new Frame(selectedServer.getBaseURL() + "?osclient="
-    // + URL.encode(mFooter.getVersion()));
-    // frame.setWidth("98%");
-    //
-    // final int off = 120;
-    //
-    // frame.setHeight((Window.getClientHeight() - off) + "px");
-    //
-    // Window.addResizeHandler(new ResizeHandler() {
-    // public void onResize(ResizeEvent event) {
-    // frame.setHeight((Window.getClientHeight() - off) + "px");
-    // }
-    // });
-    //
-    // keyboardRecorder.add(frame);
-    //
-    // // HTML frame = new HTML("<iframe src=\"" +
-    // // selectedServer.getBaseURL() +
-    // // "\" width=\"100%\" height=\"100%\" frameborder=\"0\" vspace=\"0\" "
-    // // +
-    // //
-    // "hspace=\"0\" marginwidth=\"0\" marginheight=\"0\" scrolling=\"yes\" noresize");
-    // // keyboardRecorder.add(frame);
-    // }
-    //
-    // recognized = true;
-    // }
-    //
-    // if (historyToken.startsWith(OneSwarmConstants.FRIEND_INVITE_PREFIX)) {
-    // handleInviteParameters(URL.decode(historyToken));
-    // }
-    //
-    // if( historyToken.startsWith(ADD_COMMUNITY_SERVER_TOKEN) ) {
-    // handleCommunityServerAdd(historyToken);
-    // }
-    //
-    // if (historyToken.startsWith(SEARCH_HISTORY_TOKEN)) {
-    // String searchString =
-    // historyToken.substring(SEARCH_HISTORY_TOKEN.length());
-    // displaySearch(URL.decode(searchString));
-    // }
-    //
-    // if (recognized) {
-    // header.getFilterBar().clearSearchFieldText();
-    // }
-    // }
+		var r = $wnd.location.href;
+		var i = r.indexOf("#");
+		return (i >= 0 ? r.substr(i + 1) : "");
+    }-*/;
 
     /**
      * Indicates that something has changed on the back end that warrants
@@ -642,14 +534,21 @@ public class EntireUIRoot extends DockPanel {
         swarmFileBrowser.refreshActive(false);
     }
 
+    // TODO (nick) This linked list style retrieval of the instance of
+    // EntireUIRoot seems silly. Is there any reason there would be more than
+    // one root during the life of EntrieUIRoot? If not, the singleton pattern
+    // would apply.
     public static EntireUIRoot getRoot(Widget inWidget) {
-        while (inWidget != null) {
-            if (inWidget instanceof EntireUIRoot) {
-                return (EntireUIRoot) inWidget;
+        if (entireUiRoot == null) {
+            while (inWidget != null) {
+                if (inWidget instanceof EntireUIRoot) {
+                    entireUiRoot = (EntireUIRoot) inWidget;
+
+                }
+                inWidget = inWidget.getParent();
             }
-            inWidget = inWidget.getParent();
         }
-        return null;
+        return entireUiRoot;
     }
 
     public void filterTextChanged(String text) {
@@ -657,8 +556,7 @@ public class EntireUIRoot extends DockPanel {
     }
 
     public void friendFilterChanged() {
-        FriendInfoLite selectedFriend = navSidePanel.getFriendPanel().getFriendListPanel()
-                .getSelectedFriend();
+        FriendInfoLite selectedFriend = navSidePanel.getFriendPanel().getSelectedFriend();
         if (selectedFriend != null) {
             navSidePanel.clearSelection();
         } else {
@@ -667,18 +565,19 @@ public class EntireUIRoot extends DockPanel {
     }
 
     public void clearSidebarSelection() {
-            navSidePanel.clearSelection();
-/*
-            navSidePanel.getFriendPanel().getFriendListPanel().clearSelectedFriend();
-            navSidePanel.getCommunityServersPanel().clearSelectedServer();
-            navSidePanel.get*/
+        navSidePanel.clearSelection();
+        /*
+         * navSidePanel.getFriendPanel().getFriendListPanel().clearSelectedFriend
+         * (); navSidePanel.getCommunityServersPanel().clearSelectedServer();
+         * navSidePanel.get
+         */
     }
 
     /**
      * hack attack
      */
     public FriendInfoLite getSelectedFriend() {
-        return navSidePanel.getFriendPanel().getFriendListPanel().getSelectedFriend();
+        return navSidePanel.getFriendPanel().getSelectedFriend();
     }
 
     public void pageZero() {
@@ -751,9 +650,10 @@ public class EntireUIRoot extends DockPanel {
         searchTabs.add(resultsWidget, closable);
         searchTabs.selectTab(searchTabs.getWidgetIndex(resultsWidget));
 
-        closeImg.addClickListener(new ClickListener() {
+        closeImg.addClickHandler(new ClickHandler() {
             @Override
-            public void onClick(Widget sender) {
+            public void onClick(ClickEvent event) {
+
                 if (searchTabs.getTabBar().getSelectedTab() == searchTabs
                         .getWidgetIndex(resultsWidget)) {
                     searchTabs.selectTab(searchTabs.getTabBar().getSelectedTab() - 1);
@@ -829,8 +729,7 @@ public class EntireUIRoot extends DockPanel {
             }
         }
 
-        final FriendInfoLite[] allFriends = navSidePanel.getFriendPanel().getFriendListPanel()
-                .getAllFriends();
+        final FriendInfoLite[] allFriends = navSidePanel.getFriendPanel().getAllFriends();
 
         boolean openNewWindow = true;
         if (ChatDialog.showing()) {
@@ -857,5 +756,9 @@ public class EntireUIRoot extends DockPanel {
 
     public Footer getFooter() {
         return mFooter;
+    }
+
+    public interface HistoryTokenHandler {
+        boolean doHistoryTokenAction(String historyToken);
     }
 }

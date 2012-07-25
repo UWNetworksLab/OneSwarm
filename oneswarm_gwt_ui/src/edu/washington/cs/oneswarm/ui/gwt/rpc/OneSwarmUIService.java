@@ -2,6 +2,7 @@ package edu.washington.cs.oneswarm.ui.gwt.rpc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
@@ -137,6 +138,8 @@ public interface OneSwarmUIService extends RemoteService {
     void setStringParameterValue(String session, String inParamName, String inValue);
 
     ArrayList<String> getStringListParameterValue(String session, String inParamName);
+
+    List<CommunityRecord> getCommunityServers(String session);
 
     void setStringListParameterValue(String session, String inParamName, ArrayList<String> value);
 

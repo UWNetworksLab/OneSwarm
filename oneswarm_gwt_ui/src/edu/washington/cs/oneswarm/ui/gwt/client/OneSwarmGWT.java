@@ -126,9 +126,10 @@ public class OneSwarmGWT implements EntryPoint {
      */
 
     public static native String getUserAgent() /*-{
-                                               return navigator.userAgent;
-                                               }-*/;
+		return navigator.userAgent;
+    }-*/;
 
+    @Override
     public void onModuleLoad() {
         // for drag and drop
         // workaround for GWT issue 1813
@@ -151,11 +152,13 @@ public class OneSwarmGWT implements EntryPoint {
         loadingPanel.add(loadingLabel);
 
         final Timer tick = (new Timer() {
+            @Override
             public void run() {
-                if (loadingLabel.getText().equals("Loading..."))
+                if (loadingLabel.getText().equals("Loading...")) {
                     loadingLabel.setText("Loading.");
-                else
+                } else {
                     loadingLabel.setText(loadingLabel.getText() + ".");
+                }
             }
         });
         tick.scheduleRepeating(500);
@@ -165,6 +168,7 @@ public class OneSwarmGWT implements EntryPoint {
          * Send RPC to start the back end on the servlet server
          */
         OneSwarmRPCClient.getService().startBackend(new AsyncCallback<Boolean>() {
+            @Override
             public void onFailure(Throwable caught) {
 
                 String message = caught.getClass().getName() + " / " + caught.toString() + " / "
@@ -185,6 +189,7 @@ public class OneSwarmGWT implements EntryPoint {
                 new ReportableErrorDialogBox(message, true);
             }
 
+            @Override
             public void onSuccess(Boolean result) {
                 useDebug = result;
 
@@ -215,6 +220,7 @@ public class OneSwarmGWT implements EntryPoint {
         debugText.setVisible(false);
 
         uiUpdater = new Timer() {
+            @Override
             public void run() {
                 updateComponents();
             }
@@ -229,6 +235,7 @@ public class OneSwarmGWT implements EntryPoint {
         startUpdates();
 
         Timer streamCode = new Timer() {
+            @Override
             public void run() {
                 // if( isRemoteAccess() == false ) {
                 loadSplitCode();
@@ -244,6 +251,7 @@ public class OneSwarmGWT implements EntryPoint {
 
     }
 
+    // TODO (nick) Figure out what these unused variables are initialized for.
     protected void loadSplitCode() {
         long start = System.currentTimeMillis();
         System.out.println("loading split code... ");
@@ -303,18 +311,16 @@ public class OneSwarmGWT implements EntryPoint {
     }
 
     public static void log(String message) {
+        String header = "GWT Log: " + new Date().toString() + "\t";
 
-        System.out.println(message);
+        System.out.println(header + message);
 
         if (useDebug) {
-            Date d = new Date();
-
             String prev = debugText.getText();
             if (prev.length() > 2048) {
                 prev = prev.substring(0, 2048);
             }
-
-            debugText.setText(d.toString() + "\t" + message + "\n" + prev);
+            debugText.setText(header + message + "\n" + prev);
         }
     }
 
@@ -399,6 +405,7 @@ public class OneSwarmGWT implements EntryPoint {
 
         }
 
+        @Override
         public void show() {
             // log("running show");
             // RootPanel.get().add(panel, 0, 0);
@@ -406,6 +413,7 @@ public class OneSwarmGWT implements EntryPoint {
             super.show();
         }
 
+        @Override
         public void hide() {
             // panel.removeFromParent();
             // Window.enableScrolling(true);

@@ -14,20 +14,23 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.LoadListener;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
 
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmGWT;
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
+import edu.washington.cs.oneswarm.ui.gwt.client.Updateable;
 import edu.washington.cs.oneswarm.ui.gwt.client.i18n.OSMessages;
-import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.FriendsSidePanel;
-import edu.washington.cs.oneswarm.ui.gwt.client.newui.sharedservices.SharedServicesSidePanel;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.sidebar.ClientServicesSidebarWidget;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.sidebar.CommunityServersSidebarWidget;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.sidebar.FriendListSidebarWidget;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.sidebar.InviteFriendSidebarWidget;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.sidebar.SidebarWidgetList;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.StringTools;
 
-public class NavigationSidePanel extends VerticalPanel implements SidebarWidget {
+public class NavigationSidePanel extends VerticalPanel implements Updateable {
     private static OSMessages msg = OneSwarmGWT.msg;
 
     public static final String HYPERLINK_LABEL_TRANSFERS = "hist-transfers";
@@ -45,17 +48,17 @@ public class NavigationSidePanel extends VerticalPanel implements SidebarWidget 
 
     private long mNextUpdate = 0;
 
-    private final FriendsSidePanel mFriendPanel;
-    private final CommunityServersSidePanel mCommunityServers;
-    private final SharedServicesSidePanel mSharedServices;
+    private final FriendListSidebarWidget onlineFriendWidget;
+    private final CommunityServersSidebarWidget communityServersWidget;
 
-    private List<SidebarWidget> clearList;
+    private final List<SidebarWidgetList<?>> clearList;
 
     public NavigationSidePanel() {
-        clearList = new LinkedList<SidebarWidget>();
+        clearList = new LinkedList<SidebarWidgetList<?>>();
         addStyleName(OneSwarmCss.SidebarBase.MAIN_VERTICAL_PANEL);
 
         unreadChatHTML.addClickHandler(new ClickHandler() {
+            @Override
             public void onClick(ClickEvent event) {
                 EntireUIRoot.getRoot(NavigationSidePanel.this).startChat(null);
             }
@@ -83,31 +86,30 @@ public class NavigationSidePanel extends VerticalPanel implements SidebarWidget 
 
         remoteRateLabel.setVisible(false);
 
-        mCommunityServers = new CommunityServersSidePanel();
-        mFriendPanel = new FriendsSidePanel();
-        mSharedServices = new SharedServicesSidePanel();
+        communityServersWidget = new CommunityServersSidebarWidget();
+        onlineFriendWidget = new FriendListSidebarWidget();
 
-        add(mCommunityServers);
-        add(mFriendPanel);
-        add(mSharedServices);
-
-        setCellHorizontalAlignment(mCommunityServers, ALIGN_LEFT);
-        setCellHorizontalAlignment(mFriendPanel, ALIGN_LEFT);
-        setCellHorizontalAlignment(mSharedServices, ALIGN_LEFT);
+        add(communityServersWidget);
+        add(onlineFriendWidget);
+        add(new InviteFriendSidebarWidget());
+        add(new ClientServicesSidebarWidget());
     }
 
-    public void add(Widget w) {
-        if (w instanceof SidebarWidget)
-            clearList.add((SidebarWidget) w);
+    @Override
+    public void add(IsWidget w) {
+        if (w instanceof SidebarWidgetList) {
+            clearList.add((SidebarWidgetList<?>) w);
+        }
         super.add(w);
+        setCellHorizontalAlignment(w, ALIGN_LEFT);
     }
 
-    public FriendsSidePanel getFriendPanel() {
-        return mFriendPanel;
+    public FriendListSidebarWidget getFriendPanel() {
+        return onlineFriendWidget;
     }
 
-    public CommunityServersSidePanel getCommunityServersPanel() {
-        return mCommunityServers;
+    public CommunityServersSidebarWidget getCommunityServersPanel() {
+        return communityServersWidget;
     }
 
     @Override
@@ -125,10 +127,10 @@ public class NavigationSidePanel extends VerticalPanel implements SidebarWidget 
     public void clearSelection() {
         if (mSelectedRP != null) {
             mSelectedRP.removeStyleName(OneSwarmCss.SidebarBase.SELECTED_ITEM);
-        } else {
-            for (SidebarWidget sp : clearList) {
-                sp.clearSelection();
-            }
+        }
+
+        for (SidebarWidgetList<?> sp : clearList) {
+            sp.clearSelected();
         }
     }
 
@@ -171,6 +173,7 @@ public class NavigationSidePanel extends VerticalPanel implements SidebarWidget 
          * UI to reflect the current selection
          */
         ClickHandler navClickHandler = new ClickHandler() {
+            @Override
             public void onClick(ClickEvent event) {
                 EntireUIRoot.getRoot(NavigationSidePanel.this).clearSidebarSelection();
                 mSelectedHP.setStyleName(OneSwarmCss.SidebarBase.LINK);
@@ -206,18 +209,21 @@ public class NavigationSidePanel extends VerticalPanel implements SidebarWidget 
 
     }
 
+    @Override
     public void update(int count) {
         if (mNextUpdate < System.currentTimeMillis()) {
             mNextUpdate = Long.MAX_VALUE;
 
             OneSwarmRPCClient.getService().getSidebarStats(OneSwarmRPCClient.getSessionID(),
                     new AsyncCallback<HashMap<String, String>>() {
+                        @Override
                         public void onFailure(Throwable caught) {
                             caught.printStackTrace();
 
                             mNextUpdate = System.currentTimeMillis() + 5000;
                         }
 
+                        @Override
                         public void onSuccess(HashMap<String, String> result) {
                             if (result != null) {
                                 upRateLabel.setText(msg.sidebar_speed_upload()
@@ -263,7 +269,7 @@ public class NavigationSidePanel extends VerticalPanel implements SidebarWidget 
                 + (total > 1 ? "s" : "") + "</a>");
 
         if (unreadChatHTML.isAttached() == false && total > 0) {
-            insert(unreadChatHTML, getWidgetIndex(mFriendPanel));
+            insert(unreadChatHTML, getWidgetIndex(onlineFriendWidget));
         }
 
     }

@@ -2,6 +2,7 @@ package edu.washington.cs.oneswarm.ui.gwt.rpc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -156,6 +157,8 @@ public interface OneSwarmUIServiceAsync {
 
     void getStringListParameterValue(String session, String inParamName,
             AsyncCallback<ArrayList<String>> callback);
+
+    void getCommunityServers(String session, AsyncCallback<List<CommunityRecord>> callback);
 
     void setStringListParameterValue(String session, String inParamName, ArrayList<String> value,
             AsyncCallback<Void> callback);

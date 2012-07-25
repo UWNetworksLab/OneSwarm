@@ -120,7 +120,9 @@ import edu.washington.cs.oneswarm.ui.gwt.client.newui.friends.wizard.FriendsImpo
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.settings.MagicWatchType;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.BackendErrorReport;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.BackendTask;
+import edu.washington.cs.oneswarm.ui.gwt.rpc.ClientServiceInfo;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.CommunityRecord;
+import edu.washington.cs.oneswarm.ui.gwt.rpc.FileInfo;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FileListLite;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FileTree;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInfoLite;
@@ -129,14 +131,12 @@ import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendList;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.LocaleLite;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmConstants;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmConstants.SecurityLevel;
-import edu.washington.cs.oneswarm.ui.gwt.rpc.FileInfo;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmException;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.OneSwarmUIService;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.PagedTorrentInfo;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.PermissionsGroup;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.ReportableException;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.SerialChatMessage;
-import edu.washington.cs.oneswarm.ui.gwt.rpc.ClientServiceInfo;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.SpeedTestResult;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.StringTools;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.TextSearchResultLite;
@@ -2117,6 +2117,24 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
             converted.add((toPut).get(i));
         }
         return converted;
+    }
+
+    @Override
+    public List<CommunityRecord> getCommunityServers(String session) {
+        checkSession(session);
+
+        List<CommunityRecord> communityServers = new LinkedList<CommunityRecord>();
+        StringList properties = COConfigurationManager
+                .getStringListParameter("oneswarm.community.servers");
+        List<String> temp = new ArrayList<String>();
+        for (int i = 0; i < properties.size(); i++) {
+            temp.add(properties.get(i));
+            if (i % 5 == 4) {
+                communityServers.add(new CommunityRecord(temp, 0));
+                temp.clear();
+            }
+        }
+        return communityServers;
     }
 
     @Override
@@ -4147,8 +4165,9 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
             FileInfo[] files = new FileInfo[directory.length];
             for (int i = 0; i < files.length; i++) {
                 String name = directory[i].getName();
-                if (name.equalsIgnoreCase(""))
+                if (name.equalsIgnoreCase("")) {
                     name = "/";
+                }
 
                 files[i] = new FileInfo(directory[i].getAbsolutePath(), name,
                         directory[i].isDirectory(), directory[i].canRead());

@@ -1,7 +1,7 @@
 package edu.washington.cs.oneswarm.ui.gwt.client.newui;
 
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -10,12 +10,10 @@ import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
 
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmGWT;
 import edu.washington.cs.oneswarm.ui.gwt.client.i18n.OSMessages;
@@ -33,6 +31,7 @@ public class NavigationFilterBar extends HorizontalPanel implements KeyUpHandler
     final Timer refreshTimer = new Timer() {
         String lastRefreshText = "";
 
+        @Override
         public void run() {
             // toLowerCase() since we aren't going to be doing case sensitive
             // comparisons
@@ -63,15 +62,20 @@ public class NavigationFilterBar extends HorizontalPanel implements KeyUpHandler
         DOM.setStyleAttribute(searchField.getElement(), "color", "grey");
         searchField.setText(msg.top_f2f_search());
 
-        searchField.addFocusListener(new FocusListener() {
-            public void onFocus(Widget sender) {
+        searchField.addFocusHandler(new FocusHandler() {
+            @Override
+            public void onFocus(FocusEvent event) {
                 if (searchField.getText().equals(msg.top_f2f_search())) {
                     searchField.setText("");
                 }
                 DOM.setStyleAttribute(searchField.getElement(), "color", "black");
             }
+        });
 
-            public void onLostFocus(Widget sender) {
+        searchField.addBlurHandler(new BlurHandler() {
+
+            @Override
+            public void onBlur(BlurEvent event) {
                 if (searchField.getText().length() == 0) {
                     DOM.setStyleAttribute(searchField.getElement(), "color", "grey");
                     searchField.setText(msg.top_f2f_search());
@@ -127,12 +131,14 @@ public class NavigationFilterBar extends HorizontalPanel implements KeyUpHandler
         searchField.setFocus(true);
     }
 
+    @Override
     public void onLoad() {
         if (focusOnLoad) {
             searchField.setFocus(true);
         }
     }
 
+    @Override
     public void onKeyUp(KeyUpEvent event) {
         int keyCode = event.getNativeKeyCode();
         /**

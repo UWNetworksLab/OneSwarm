@@ -1,18 +1,19 @@
 package edu.washington.cs.oneswarm.ui.gwt.client.newui.friends;
 
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmDialogBox;
+import edu.washington.cs.oneswarm.ui.gwt.client.newui.sidebar.FriendListSidebarWidget;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInfoLite;
 
 public class FriendPropertiesDialog extends OneSwarmDialogBox {
     private final FriendPropertiesPanel mainPanel;
-    private final FriendListPanel parent;
-    private String initialGroup;
+    private final FriendListSidebarWidget parent;
+    private final String initialGroup;
 
     public FriendPropertiesDialog(final FriendInfoLite friend, boolean useDebug) {
         this(null, friend, useDebug);
     }
 
-    public FriendPropertiesDialog(FriendListPanel parent, final FriendInfoLite friend,
+    public FriendPropertiesDialog(FriendListSidebarWidget parent, final FriendInfoLite friend,
             boolean useDebug) {
         super();
         this.parent = parent;
@@ -30,13 +31,13 @@ public class FriendPropertiesDialog extends OneSwarmDialogBox {
         }
     }
 
+    @Override
     public void hide() {
         mainPanel.stopUpdates();
         super.hide();
         if (parent != null) {
             boolean force = !initialGroup.equals(mainPanel.getGroup());
-            parent.updateUI(force);
+            parent.update(force ? 0 : 1);
         }
     }
-
 }

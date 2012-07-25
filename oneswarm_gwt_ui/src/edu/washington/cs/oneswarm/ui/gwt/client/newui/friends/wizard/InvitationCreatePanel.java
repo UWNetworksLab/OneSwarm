@@ -17,6 +17,7 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 import edu.washington.cs.oneswarm.ui.gwt.client.OneSwarmRPCClient;
+import edu.washington.cs.oneswarm.ui.gwt.client.ReportableErrorDialogBox;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.HelpButton;
 import edu.washington.cs.oneswarm.ui.gwt.client.newui.OneSwarmCss;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.FriendInvitationLite;
@@ -130,6 +131,7 @@ public class InvitationCreatePanel extends FriendsImportWithBack {
             emailTextBox.setWidth("80%");
             emailTextBox.setText(exampleEmail);
             emailTextBox.addMouseDownHandler(new MouseDownHandler() {
+                @Override
                 public void onMouseDown(MouseDownEvent event) {
                     if (emailTextBox.getText().equals(exampleEmail)) {
                         emailTextBox.setText("");
@@ -145,6 +147,7 @@ public class InvitationCreatePanel extends FriendsImportWithBack {
             manual.setValue(true);
             deliveryPanel.add(manual);
             manual.addClickHandler(new ClickHandler() {
+                @Override
                 public void onClick(ClickEvent event) {
                     emailAdressPanel.setVisible(false);
                 }
@@ -155,6 +158,7 @@ public class InvitationCreatePanel extends FriendsImportWithBack {
                     msg.add_friends_invite_create_delivery_email_help());
             deliveryPanel.add(emailRadioButton);
             emailRadioButton.addClickHandler(new ClickHandler() {
+                @Override
                 public void onClick(ClickEvent event) {
                     emailAdressPanel.setVisible(true);
                 }
@@ -190,6 +194,7 @@ public class InvitationCreatePanel extends FriendsImportWithBack {
             return "Create Invite";
         }
 
+        @Override
         public void onKeyUp(KeyUpEvent event) {
             boolean nickOk = nickBox.getText().length() > 0;
             boolean emailOk = true;
@@ -212,11 +217,13 @@ public class InvitationCreatePanel extends FriendsImportWithBack {
             OneSwarmRPCClient.getService().createInvitation(OneSwarmRPCClient.getSessionID(),
                     nickname, true, MAX_AGE, securityLevel,
                     new AsyncCallback<FriendInvitationLite>() {
+                        @Override
                         public void onFailure(Throwable caught) {
                             caught.printStackTrace();
-                            Window.alert("error: " + caught.getMessage());
+                            new ReportableErrorDialogBox("error: " + caught.getMessage(), false);
                         }
 
+                        @Override
                         public void onSuccess(final FriendInvitationLite invite) {
                             Step2.this.remove(wait);
                             final String key = invite.getKey();
@@ -224,9 +231,11 @@ public class InvitationCreatePanel extends FriendsImportWithBack {
                                 OneSwarmRPCClient.getService().getComputerName(
                                         OneSwarmRPCClient.getSessionID(),
                                         new AsyncCallback<String>() {
+                                            @Override
                                             public void onFailure(Throwable caught) {
                                             }
 
+                                            @Override
                                             public void onSuccess(String nick) {
                                                 parent.enableNextButton(true);
                                                 mailtoImpl(buildMailto(email, key, nick));
@@ -242,9 +251,9 @@ public class InvitationCreatePanel extends FriendsImportWithBack {
 
         }
 
-        private native void mailtoImpl(String mailto) /*-{
-                                                      $wnd.location = mailto;
-                                                      }-*/;
+        private void mailtoImpl(String mailto) {
+            Window.open(mailto, "_blank", "");
+        }
 
         private VerticalPanel createDisplayCodePanel(String code) {
             VerticalPanel p = new VerticalPanel();

@@ -5,7 +5,6 @@
 	http://127.0.0.1:29615/oneswarmgwt/OneSwarm.css
 	http://localhost:8888/oneswarmgwt/OneSwarm.css
 */
-
 body {
 	background-color: white;
 	color: black;
@@ -98,11 +97,6 @@ table.gwt-DecoratedTabPanel.os-xfer_details_tabs .gwt-TabPanelBottom {
 	border-width: 2px 0px 1px;
 	overflow: hidden;
 	padding: 0px;
-}
-
-table.gwt-DecoratedTabPanel.os-f2f_tabs table.gwt-DecoratedTabBar .gwt-Label
-	{ /* not quite sure what to do here, but as-is could look better */
-	
 }
 
 .os-welcome_banner {
@@ -213,7 +207,7 @@ table.gwt-DecoratedTabPanel.os-f2f_tabs table.gwt-DecoratedTabBar .gwt-Label
 
 .gwt-ScrollTable .headerTable td,.gwt-ScrollTable .footerTable td {
 	color: #000;
-	background: color :                                           #10428C;
+	background: color:                                            #10428C;
 	font-weight: bold;
 	padding-bottom: 3px;
 	white-space: nowrap;
@@ -327,10 +321,6 @@ table.gwt-DecoratedTabPanel.os-f2f_tabs table.gwt-DecoratedTabBar .gwt-Label
 	border-bottom: 1px solid #8da0b1;
 }
 
-//TODO (nick) remove
-.os-browser_header_buttons .gwt-ListBox {
-}
-
 .os-torrent-list-corners {
 	background-color: #c3d9ff;
 }
@@ -351,10 +341,6 @@ table.gwt-DecoratedTabPanel.os-f2f_tabs table.gwt-DecoratedTabBar .gwt-Label
 
 .os-torrent-list-default {
 	font-size: 80%;
-}
-
-.os-torrent-list-details { /*font-size: 80%;*/
-	
 }
 
 .os-torrent-list-details-table {
@@ -460,9 +446,6 @@ div#os-no_files_label {
 	border-top: 5px solid #d0e4f6;
 }
 
-/*
- * Override GWT defaults since we muck around with everything
- */
 .gwt-DialogBox .Caption {
 	background: None;
 	padding: 4px 4px 4px 8px;
@@ -543,12 +526,17 @@ div#os-no_files_label {
 	padding-left: 5px;
 }
 
-
 /* OneSwarmCss.SidebarWidget */
 .os-sidebar_widget_main_panel {
 	margin-top: 5px;
 	width: 170px;
 	border: 2px solid #C3D9FF;
+}
+
+.os-sidebar_widget_main_panel .gwt-Label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .os-sidebar_widget_main_panel.gwt-DisclosurePanel .header {
@@ -571,6 +559,11 @@ div#os-no_files_label {
 	background-color: #c0ccff;
 }
 
+.os-sidebar_widget_item {
+	width: 170px;
+	text-overflow: ellipsis;
+}
+
 .os-sidebar_widget_footer_menu_bar {
 	border: 0px;
 	text-decoration: underline;
@@ -587,7 +580,6 @@ div#os-no_files_label {
 	cursor: pointer;
 }
 
-
 /* OneSwarmCss.SidebarBase */
 .os-sidebar_main_vertical_panel {
 	padding-left: 10px;
@@ -600,7 +592,7 @@ div#os-no_files_label {
 	text-align: left;
 }
 
-.os-sidebar_selected_item *{
+.os-sidebar_selected_item * {
 	background-color: #B3CBE2;
 	border-color: #B3CBE2;
 }
@@ -616,7 +608,6 @@ div#os-no_files_label {
 }
 
 /* End OneSwarmCss.java mapped css */
-
 .os-categoryList {
 	width: 180px;
 }
@@ -624,7 +615,6 @@ div#os-no_files_label {
 os-friendPanel {
 	padding-top: 20px;
 }
-
 
 .os-friendList .header td {
 	color: #0000AA;

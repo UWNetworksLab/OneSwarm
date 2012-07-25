@@ -104,9 +104,6 @@ public class ReportableErrorDialogBox extends OneSwarmDialogBox {
 
         setWidget(mainPanel);
 
-        show();
-        setVisible(false);
         center();
-        setVisible(true);
     }
 }
