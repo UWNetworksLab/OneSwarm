@@ -27,8 +27,7 @@ import edu.washington.cs.oneswarm.ui.gwt.rpc.SharedServiceDTO;
 
 /**
  * This class manages local client and server services. It keeps records of
- * active
- * services, and allows new services to be registered.
+ * active services, and allows new services to be registered.
  * 
  * @author isdal
  * 
@@ -258,7 +257,12 @@ public class ServiceSharingManager {
             List<Long> services = COConfigurationManager.getListParameter(
                     SHARED_SERVICE_CONFIG_KEY, new LinkedList<Long>());
             for (Long key : services) {
-                SharedService cs = new SharedService(key);
+                SharedService cs;
+                if (ExitNodeList.getInstance().isExitNodeSharedService(key)) {
+                    cs = new SharedService(key);
+                } else {
+                    cs = new ExitNodeSharedService(key);
+                }
                 sharedServices.put(key, cs);
                 enableLowLatencyNetwork = true;
             }

@@ -24,14 +24,13 @@ import edu.washington.cs.oneswarm.f2f.servicesharing.DataMessage.RawMessageEncod
 
 public class PolicyNetworkConnection implements NetworkConnection {
     /**
-     * Read an initial header from an incoming stream before creating an
-     * actual network connection.
-     * Header looks like:
-     * port * 2, addres length, address.
+     * Read an initial header from an incoming stream before creating an actual
+     * network connection. Header looks like: port * 2, addres length, address.
      */
     private NetworkConnection connection;
     private ConnectionListener pendingListener;
     private final PolicyHeader request;
+    private final long serviceId;
     private static final byte SS = 0x43;
 
     private class PolicyHeader {
@@ -42,13 +41,14 @@ public class PolicyNetworkConnection implements NetworkConnection {
     }
 
     // TODO: construct with policy.
-    public PolicyNetworkConnection() {
+    public PolicyNetworkConnection(long serviceId) {
         request = new PolicyHeader();
+        this.serviceId = serviceId;
     }
 
     protected void completeHeader(Message message, boolean manual_listener_notify) {
-        // TODO: check policy against request.
-        if (true) {
+        if (ExitNodeList.getInstance().allowLocalExitConnection(serviceId, request.host,
+                request.port)) {
             InetSocketAddress address = new InetSocketAddress(request.host, request.port);
             ConnectionEndpoint target = new ConnectionEndpoint(address);
             target.addProtocol(new ProtocolEndpointTCP(address));
@@ -178,7 +178,8 @@ public class PolicyNetworkConnection implements NetworkConnection {
                             byte[] addr = new byte[remaining];
                             data[0].get(SS, addr);
                             PolicyNetworkConnection.this.request.host = new String(addr);
-                            PolicyNetworkConnection.this.completeHeader(message, manual_listener_notify);
+                            PolicyNetworkConnection.this.completeHeader(message,
+                                    manual_listener_notify);
                         } else {
                             int port = data[0].get(SS) << 8;
                             port += data[0].get(SS);
