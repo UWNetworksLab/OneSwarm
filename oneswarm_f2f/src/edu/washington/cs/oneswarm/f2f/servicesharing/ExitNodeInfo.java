@@ -1,14 +1,28 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
+import java.io.UnsupportedEncodingException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+
+import edu.uw.cse.netlab.reputation.LocalIdentity;
+
 public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     // Publicly available info
     private String nickname;
-    private long id;
+    private final long serviceId;
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
     private byte[] ipAddr;
     private int advertizedBandwidth;
     private PolicyTree exitPolicy;
@@ -17,19 +31,27 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
 
     // Private data stored about this exit node
     private static final int HISTORY_LENGTH = 10; // Must be >= 3
-    private Queue<Integer> bandwidthHistory; 
+    private Queue<Integer> bandwidthHistory;
     private int avgBandwidth; // Stored avg of history (KB/s)
-    private Queue<Integer> latencyHistory; 
+    private Queue<Integer> latencyHistory;
     private int avgLatency; // Stored avg of history (ms)
 
     public ExitNodeInfo(String nickname, long id, int advertBandwidth, String[] exitPolicy,
-            Date lastOutage, String version) {
+            Date onlineSince, String version) {
         this.nickname = nickname;
-        this.id = id;
+        this.serviceId = id;
         this.advertizedBandwidth = advertBandwidth;
         this.exitPolicy = new PolicyTree(exitPolicy);
-        this.onlineSince = lastOutage;
+        this.onlineSince = onlineSince;
         this.version = version;
+
+        try {
+            KeyPair keys = LocalIdentity.get().loadOrGenerateKeys();
+            this.privateKey = keys.getPrivate();
+            this.publicKey = keys.getPublic();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -47,6 +69,10 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         exitPolicy = new PolicyTree(policy);
     }
 
+    public String getExitPolicy() {
+        return exitPolicy.toString();
+    }
+
     public boolean allowsConnectionTo(String url, int port) {
         return exitPolicy.getPolicy(url, port);
     }
@@ -55,13 +81,16 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
      * Compares as per compareTo()'s contract using bandwidth. Attempts to use
      * privately collected data about each node if it is sufficiently available.
      */
+    @Override
     public int compareTo(ExitNodeInfo other) {
         int thisBandwidth = this.advertizedBandwidth;
         int otherBandwidth = other.advertizedBandwidth;
-        if (this.bandwidthHistory.size() >= 3)
+        if (this.bandwidthHistory.size() >= 3) {
             thisBandwidth = this.avgBandwidth;
-        if (other.bandwidthHistory.size() >= 3)
+        }
+        if (other.bandwidthHistory.size() >= 3) {
             otherBandwidth = other.avgBandwidth;
+        }
         return thisBandwidth - otherBandwidth;
     }
 
@@ -69,20 +98,47 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         return nickname;
     }
 
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public long getId() {
-        return id;
+        return serviceId;
+    }
+
+    /**
+     * Returns public key as String.
+     * 
+     * @return PublicKey in the following format ALGOYTHM:FORMAT:KEY (KEY in
+     *         base 64)
+     */
+    public String getPublicKeyString() {
+        return this.publicKey.getAlgorithm() + ":" + this.publicKey.getFormat() + ":"
+                + Base64.encode(this.publicKey.getEncoded());
     }
 
     public int getAdvertizedBandwith() {
         return advertizedBandwidth;
     }
 
+    public void setAdvertizedBandwidth(int advertizedBandwidth) {
+        this.advertizedBandwidth = advertizedBandwidth;
+    }
+
     public Date getOnlineSinceDate() {
         return onlineSince;
     }
 
+    public void setOnlineSinceDate(Date date) {
+        this.onlineSince = date;
+    }
+
     public String getVersion() {
         return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public void recordBandwidth(int kbps) {
@@ -104,46 +160,115 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     }
 
     private int averageIntQueue(Queue<Integer> q) {
-        while (q.size() > HISTORY_LENGTH)
+        while (q.size() > HISTORY_LENGTH) {
             q.remove();
+        }
         int sum = 0;
-        for (int i = 0; i < q.size(); i++)
+        for (int i = 0; i < q.size(); i++) {
             sum += q.remove();
+        }
         return sum / q.size();
     }
 
-    
     public byte[] getIpAddr() {
         return ipAddr;
     }
 
     public void setIpAddr(byte[] ipAddr) {
-        if(ipAddr.length == 4 || ipAddr.length == 16)
+        if (ipAddr.length == 4 || ipAddr.length == 16) {
             this.ipAddr = ipAddr;
-        else
+        } else {
             throw new IllegalArgumentException();
+        }
     }
 
+    public byte[] hashBase() {
+        try {
+            return (this.getPublicKeyString() + this.nickname + this.advertizedBandwidth
+                    + this.exitPolicy.toString() + this.onlineSince + this.version)
+                    .getBytes(XMLConstants.ENCODING);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String signature() {
+        try {
+            Signature sig = Signature.getInstance("SHA1withRSA");
+            sig.initSign(this.privateKey);
+            sig.update(hashBase());
+            return Base64.encode(sig.sign());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void fullXML(ContentHandler hd) throws SAXException {
+        hd.startElement("", "", XMLConstants.EXIT_NODE, null);
+        addKey(hd, XMLConstants.SERVICE_ID, Long.toString(serviceId));
+        addKey(hd, XMLConstants.PUBLIC_KEY, getPublicKeyString());
+        addKey(hd, XMLConstants.NICKNAME, nickname);
+        addKey(hd, XMLConstants.BANDWIDTH, "" + advertizedBandwidth);
+        addKey(hd, XMLConstants.EXIT_POLICY, exitPolicy.toString());
+        addKey(hd, XMLConstants.VERSION, version);
+        hd.startElement("", "", XMLConstants.SIGNATURE, null);
+        StringBuffer usb = new StringBuffer();
+        String signature = this.signature();
+        usb.append(signature, 0, signature.length());
+        char[] sig = usb.toString().toCharArray();
+        hd.characters(sig, 0, sig.length);
+        hd.endElement("", "", XMLConstants.SIGNATURE);
+
+        hd.endElement("", "", XMLConstants.EXIT_NODE);
+    }
+
+    public void shortXML(ContentHandler hd) throws SAXException {
+        hd.startElement("", "", XMLConstants.EXIT_NODE, null);
+        addKey(hd, XMLConstants.SERVICE_ID, Long.toString(serviceId));
+        addKey(hd, XMLConstants.PUBLIC_KEY, getPublicKeyString());
+        hd.startElement("", "", XMLConstants.SIGNATURE, null);
+        StringBuffer usb = new StringBuffer();
+        String signature = this.signature();
+        usb.append(signature, 0, signature.length());
+        char[] sig = usb.toString().toCharArray();
+        hd.characters(sig, 0, sig.length);
+        hd.endElement("", "", XMLConstants.SIGNATURE);
+
+        hd.endElement("", "", XMLConstants.EXIT_NODE);
+    }
+
+    private void addKey(ContentHandler hd, String key, String value) throws SAXException {
+        hd.startElement("", "", key, null);
+        char[] valArray = value.toCharArray();
+        hd.characters(valArray, 0, valArray.length);
+        hd.endElement("", "", key);
+    }
 
     private static class PolicyTree {
         private PolicyNode root;
+        private final StringBuilder policyString;
 
         public PolicyTree(String[] policy) {
+            policyString = new StringBuilder();
             root = new PolicyNode("");
             addPolicies(policy);
         }
 
         public void addPolicies(String[] policyStrings) {
-            for (int i = 0; i < policyStrings.length; i++)
+            for (int i = 0; i < policyStrings.length; i++) {
                 addPolicy(policyStrings[i]);
+            }
         }
 
-        public void addPolicy(String policyString) {
-            policyString = policyString.toLowerCase();
-            PolicyValue policy;
+        public void addPolicy(String policy) {
+            policyString.append(policy + ",");
+            policy = policy.toLowerCase();
+            PolicyValue policyVal;
             int port;
 
-            String[] policyParts = policyString.split("[ :]");
+            String[] policyParts = policy.split("[ :]");
 
             switch (policyParts.length) {
             case 2:
@@ -151,24 +276,26 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
                 break;
             case 3:
                 port = policyParts[2].equals("*") ? -1 : Integer.parseInt(policyParts[2]);
-                if (port < -1 || port > 65535)
+                if (port < -1 || port > 65535) {
                     throw new IllegalArgumentException("Improper Format - Port out of range.");
+                }
                 break;
             default:
                 throw new IllegalArgumentException(
                         "Improper Format - Should be (reject|accept) (domain|ip)[:port]");
             }
 
-            if (policyParts[0].equalsIgnoreCase("accept"))
-                policy = PolicyValue.ACCEPT;
-            else if (policyParts[0].equalsIgnoreCase("reject"))
-                policy = PolicyValue.REJECT;
-            else
+            if (policyParts[0].equalsIgnoreCase("accept")) {
+                policyVal = PolicyValue.ACCEPT;
+            } else if (policyParts[0].equalsIgnoreCase("reject")) {
+                policyVal = PolicyValue.REJECT;
+            } else {
                 throw new IllegalArgumentException(
                         "Improper Format - First word is not (accept|reject)");
+            }
 
             String[] urlParts = policyParts[1].split("\\.");
-            root = addPolicy(urlParts, urlParts.length - 1, port, policy, root);
+            root = addPolicy(urlParts, urlParts.length - 1, port, policyVal, root);
         }
 
         private PolicyNode addPolicy(String[] url, int index, int port, PolicyValue policy,
@@ -177,8 +304,9 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
                 root.children.add(new PolicyNode(port, policy));
             } else {
                 PolicyNode child = root.lastInstanceOfUrlPart(url[index]);
-                if (child == null)
+                if (child == null) {
                     child = root.add(new PolicyNode(url[index]));
+                }
                 child = addPolicy(url, index - 1, port, policy, child);
             }
             return root;
@@ -189,8 +317,9 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
             url = url.toLowerCase();
             String[] urlParts = url.split("\\.");
             PolicyValue policy = getPolicy(urlParts, urlParts.length - 1, port, root);
-            if (PolicyValue.ACCEPT == policy)
+            if (PolicyValue.ACCEPT == policy) {
                 return true;
+            }
             return false;
         }
 
@@ -198,64 +327,64 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
             for (PolicyNode child : root.children) {
                 if (index >= 0 && (child.domain.equals("*") || domain[index].equals(child.domain))) {
                     PolicyValue temp = getPolicy(domain, index - 1, port, child);
-                    if (temp != null)
+                    if (temp != null) {
                         return temp;
-                } else if (port == child.port || child.port == -1)
+                    }
+                } else if (port == child.port || child.port == -1) {
                     return child.policy;
+                }
             }
             return null;
         }
-        
+
+        @Override
+        public String toString() {
+            return policyString.toString();
+        }
+
         private enum PolicyValue {
             ACCEPT, REJECT
         }
-        
+
         class PolicyNode {
-        /*
-         * Either domainPart or port will be filled for each node. "*" is wild
-         * card for domainPart, "" is unused field -1 means wild card for port,
-         * -2 is unused field
-         */
-        String domain;
-        int port;
-        List<PolicyNode> children;
-        PolicyValue policy;
+            /*
+             * Either domainPart or port will be filled for each node. "*" is
+             * wild card for domainPart, "" is unused field -1 means wild card
+             * for port, -2 is unused field
+             */
+            String domain;
+            int port;
+            List<PolicyNode> children;
+            PolicyValue policy;
 
-        // Constructs a domainPart node
-        public PolicyNode(String domainPart) {
-            this(domainPart, -2, null);
-        }
+            // Constructs a domainPart node
+            public PolicyNode(String domainPart) {
+                this(domainPart, -2, null);
+            }
 
-        // Constructs a port node
-        public PolicyNode(int port, PolicyValue policy) {
-            this("", port, policy);
-        }
+            // Constructs a port node
+            public PolicyNode(int port, PolicyValue policy) {
+                this("", port, policy);
+            }
 
-        private PolicyNode(String domainPart, int port, PolicyValue policy) {
-            this.domain = domainPart;
-            this.port = port;
-            this.policy = policy;
-            this.children = new LinkedList<PolicyNode>();
-        }
+            private PolicyNode(String domainPart, int port, PolicyValue policy) {
+                this.domain = domainPart;
+                this.port = port;
+                this.policy = policy;
+                this.children = new LinkedList<PolicyNode>();
+            }
 
-        public PolicyNode lastInstanceOfUrlPart(String urlPart) {
-            if (!children.isEmpty() && children.get(children.size() - 1).domain.equals(urlPart))
-                return children.get(children.size() - 1);
-            return null;
-        }
+            public PolicyNode lastInstanceOfUrlPart(String urlPart) {
+                if (!children.isEmpty() && children.get(children.size() - 1).domain.equals(urlPart)) {
+                    return children.get(children.size() - 1);
+                }
+                return null;
+            }
 
-        public PolicyNode add(PolicyNode node) {
-            children.add(node);
-            return node;
+            public PolicyNode add(PolicyNode node) {
+                children.add(node);
+                return node;
+            }
         }
-
-        public String toString() {
-            String temp = "";
-            temp += domain.isEmpty() ? "--" : domain;
-            temp += ":";
-            temp += port == -1 ? "*" : port == -2 ? "--" : port;
-            return temp;
-        }
-    }
     }
 }

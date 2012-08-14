@@ -308,12 +308,13 @@ public class ServiceSharingManager {
         }
         return port;
     }
-    
-    public void registerExitNodeSharedService(long searchKey, String name, InetSocketAddress address, ExitNodeInfo info) {
+
+    public void registerExitNodeSharedService(long searchKey, String name,
+            InetSocketAddress address, ExitNodeInfo info) {
         // Tell the list that connections are allowed to exit from this key.
         info.setIpAddr(address.getAddress().getAddress());
-        ExitNodeList.getInstance().setExitNodeSharedService(searchKey, info);
-        
+        ExitNodeList.getInstance().setExitNodeSharedService(info);
+
         registerSharedService(searchKey, name, address, true, ExitNodeSharedService.class);
     }
 
@@ -338,7 +339,7 @@ public class ServiceSharingManager {
                     services.add(Long.valueOf(searchKey));
                     COConfigurationManager.setParameter(SHARED_SERVICE_CONFIG_KEY, services);
                 }
-                ss = (SharedService) serviceClass.getConstructor(Long.class).newInstance(searchKey);
+                ss = serviceClass.getConstructor(Long.class).newInstance(searchKey);
                 ss.setName(name);
                 ss.setAddress(address);
                 logger.info("created new service: " + ss);
@@ -348,7 +349,7 @@ public class ServiceSharingManager {
                 ss.setName(name);
                 ss.setAddress(address);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             lock.unlock();
