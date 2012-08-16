@@ -1,7 +1,6 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
@@ -10,38 +9,42 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Logger;
 
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
+import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
+
 public class ExitNodeList {
+    private static Logger log = Logger.getLogger(ExitNodeList.class.getName());
     // Singleton Pattern.
     private final static ExitNodeList instance = new ExitNodeList();
     private static final String LOCAL_SERVICE_KEY_CONFIG_KEY = "DISTINGUISHED_SHARED_SERVICE_KEY";
+    private static final String DIRECTORY_SERVER_URL_CONFIG_KEY = "DIRECTORY_SERVER_URL_CONFIG_KEY";
     private static final long KEEPALIVE_INTERVAL = 55 * 60 * 1000;
-    // TODO (nick) decide where this should be saved / edited by user... Azureus
-    // Conf with UI in Ben's setting panel?
-    // TODO (nick) should it publish to one, or a list of servers?
-    private String ExitNodeDirectoryUrl;
 
     private final List<ExitNodeInfo> exitNodeList;
     private final Map<Long, ExitNodeInfo> localSharedExitServices;
 
     private ExitNodeList() {
-        // TODO (nick) Uncomment to enable regular updates once debugging is
-        // done.
-
-        // Timer keepAliveRegistrations = new Timer();
-        // keepAliveRegistrations.schedule(new TimerTask() {
-        // @Override
-        // public void run() {
-        // ExitNodeList.this.registerExitNodes();
-        // // Check the response for errors.
-        // }
-        // }, 0, KEEPALIVE_INTERVAL);
+        Timer keepAliveRegistrations = new Timer();
+        keepAliveRegistrations.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    ExitNodeList.this.registerExitNodes();
+                } catch (IOException e) {
+                    // Unexpected
+                    e.printStackTrace();
+                } catch (SAXException e) {
+                    // Unexpected
+                    e.printStackTrace();
+                }
+            }
+        }, KEEPALIVE_INTERVAL / 2, KEEPALIVE_INTERVAL);
         this.exitNodeList = new LinkedList<ExitNodeInfo>();
         this.localSharedExitServices = new HashMap<Long, ExitNodeInfo>();
     }
@@ -77,7 +80,11 @@ public class ExitNodeList {
     }
 
     public void setDirectoryServer(String url) {
-        ExitNodeDirectoryUrl = url;
+        COConfigurationManager.setParameter(DIRECTORY_SERVER_URL_CONFIG_KEY, url);
+    }
+
+    public String getDirectoryServerUrl() {
+        return COConfigurationManager.getStringParameter(DIRECTORY_SERVER_URL_CONFIG_KEY, "");
     }
 
     /**
@@ -128,32 +135,87 @@ public class ExitNodeList {
     }
 
     // TODO (nick) remove suppress warnings
-    @SuppressWarnings("deprecation")
     public void registerExitNodes() throws IOException, SAXException {
-        // Setup connection to Directory Server
-        URL server = new URL(ExitNodeDirectoryUrl + "?action=register");
+        String exitNodeDirectoryUrl = getDirectoryServerUrl();
+        if (exitNodeDirectoryUrl == "") {
+            new IllegalArgumentException("No DirectoryServer Specified.").printStackTrace();
+            return;
+        }
+        HttpURLConnection conn = createConnectionTo(exitNodeDirectoryUrl + "?action=checkin");
+        XMLHelper xmlOut = new XMLHelper(conn.getOutputStream());
+
+        // Write check-in request to the connection
+        for (ExitNodeInfo node : localSharedExitServices.values()) {
+            node.shortXML(xmlOut);
+        }
+        xmlOut.close();
+
+        // Retry registrations that are fixable until no fixable errors remain.
+        while (true) {
+            // Parse reply for error messages
+            List<DirectoryServerMsg> msgs = new LinkedList<DirectoryServerMsg>();
+            XMLHelper.parse(conn.getInputStream(), new DirectoryServerMsgHandler(msgs));
+            conn.disconnect();
+            conn = null;
+
+            List<ExitNodeInfo> toReRegister = decideWhatNeedsReregistering(msgs);
+
+            // If there are no fixable errors, stop trying
+            if (toReRegister.size() == 0) {
+                break;
+            }
+
+            // Otherwise, retry the nodes that need ro be registered
+            conn = createConnectionTo(exitNodeDirectoryUrl + "?action=register");
+            xmlOut = new XMLHelper(conn.getOutputStream());
+            // Write register request to the connection
+            for (ExitNodeInfo node : toReRegister) {
+                node.fullXML(xmlOut);
+            }
+            xmlOut.close();
+        }
+    }
+
+    private List<ExitNodeInfo> decideWhatNeedsReregistering(List<DirectoryServerMsg> msgs) {
+        List<ExitNodeInfo> toReregister = new LinkedList<ExitNodeInfo>();
+        for (DirectoryServerMsg msg : msgs) {
+            // If serviceId is duplicate, pull the node out and give
+            // it a new serviceId.
+
+            if (msg.errorCodes.contains(XMLHelper.STATUS_SUCCESS)) {
+                msg.removeErrorCode(XMLHelper.STATUS_SUCCESS);
+            } else if (msg.errorCodes.contains(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID)) {
+                ExitNodeInfo temp = localSharedExitServices.get(msg.serviceId);
+                toReregister.add(temp);
+                msg.removeErrorCode(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID);
+            } else if (msg.errorCodes.contains(XMLHelper.ERROR_DUPLICATE_SERVICE_ID)) {
+                ExitNodeInfo temp = localSharedExitServices.remove(msg.serviceId);
+
+                // These two lines assume that there is one ExitService on
+                // this computer.
+                resetLocalServiceKey();
+                temp.setId(getLocalServiceKey());
+
+                setExitNodeSharedService(temp);
+                toReregister.add(temp);
+                msg.removeErrorCode(XMLHelper.ERROR_DUPLICATE_SERVICE_ID);
+            }
+            while (msg.errorCodes.size() > 0 && msg.errorStrings.size() > 0) {
+                log.warning("ExitNode Registration Error: " + msg.errorCodes.remove(0) + " - "
+                        + msg.errorStrings.remove(0));
+            }
+        }
+        msgs.clear();
+        return toReregister;
+    }
+
+    private HttpURLConnection createConnectionTo(String url) throws IOException {
+        URL server = new URL(url);
         HttpURLConnection req = (HttpURLConnection) server.openConnection();
         req.setDoInput(true);
         req.setDoOutput(true);
         req.setUseCaches(false);
         req.setRequestProperty("Content-Type", "text/xml");
-        OutputStream out = req.getOutputStream();
-
-        // Set up XML Writer
-        OutputFormat of = new OutputFormat("XML", XMLConstants.ENCODING, true);
-        of.setIndent(1);
-        of.setIndenting(true);
-        XMLSerializer serializer = new XMLSerializer(out, of);
-        ContentHandler hd = serializer.asContentHandler();
-
-        for (ExitNodeInfo node : localSharedExitServices.values()) {
-            node.fullXML(hd);
-        }
-
-        // TODO (nick) un-psuedo this code
-        // output = new StringBuilder();
-        // for(resp that contains error){
-        // registerInsteadOfCheckIn(node, hd);
-        // }
+        return req;
     }
 }

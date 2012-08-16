@@ -10,17 +10,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 import edu.uw.cse.netlab.reputation.LocalIdentity;
+import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 
 public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     // Publicly available info
     private String nickname;
-    private final long serviceId;
+    private long serviceId;
     private PublicKey publicKey;
     private PrivateKey privateKey;
     private byte[] ipAddr;
@@ -106,6 +106,10 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         return serviceId;
     }
 
+    public void setId(long serviceId) {
+        this.serviceId = serviceId;
+    }
+
     /**
      * Returns public key as String.
      * 
@@ -184,9 +188,8 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
 
     public byte[] hashBase() {
         try {
-            return (this.getPublicKeyString() + this.nickname + this.advertizedBandwidth
-                    + this.exitPolicy.toString() + this.onlineSince + this.version)
-                    .getBytes(XMLConstants.ENCODING);
+            return (getPublicKeyString() + nickname + advertizedBandwidth + exitPolicy.toString() + version)
+                    .getBytes(XMLHelper.ENCODING);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -205,45 +208,24 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         return null;
     }
 
-    public void fullXML(ContentHandler hd) throws SAXException {
-        hd.startElement("", "", XMLConstants.EXIT_NODE, null);
-        addKey(hd, XMLConstants.SERVICE_ID, Long.toString(serviceId));
-        addKey(hd, XMLConstants.PUBLIC_KEY, getPublicKeyString());
-        addKey(hd, XMLConstants.NICKNAME, nickname);
-        addKey(hd, XMLConstants.BANDWIDTH, "" + advertizedBandwidth);
-        addKey(hd, XMLConstants.EXIT_POLICY, exitPolicy.toString());
-        addKey(hd, XMLConstants.VERSION, version);
-        hd.startElement("", "", XMLConstants.SIGNATURE, null);
-        StringBuffer usb = new StringBuffer();
-        String signature = this.signature();
-        usb.append(signature, 0, signature.length());
-        char[] sig = usb.toString().toCharArray();
-        hd.characters(sig, 0, sig.length);
-        hd.endElement("", "", XMLConstants.SIGNATURE);
-
-        hd.endElement("", "", XMLConstants.EXIT_NODE);
+    public void fullXML(XMLHelper xmlOut) throws SAXException {
+        xmlOut.startElement(XMLHelper.EXIT_NODE);
+        xmlOut.writeTag(XMLHelper.SERVICE_ID, Long.toString(serviceId));
+        xmlOut.writeTag(XMLHelper.PUBLIC_KEY, getPublicKeyString());
+        xmlOut.writeTag(XMLHelper.NICKNAME, nickname);
+        xmlOut.writeTag(XMLHelper.BANDWIDTH, "" + advertizedBandwidth);
+        xmlOut.writeTag(XMLHelper.EXIT_POLICY, exitPolicy.toString());
+        xmlOut.writeTag(XMLHelper.VERSION, version);
+        xmlOut.writeTag(XMLHelper.SIGNATURE, signature());
+        xmlOut.endElement(XMLHelper.EXIT_NODE);
     }
 
-    public void shortXML(ContentHandler hd) throws SAXException {
-        hd.startElement("", "", XMLConstants.EXIT_NODE, null);
-        addKey(hd, XMLConstants.SERVICE_ID, Long.toString(serviceId));
-        addKey(hd, XMLConstants.PUBLIC_KEY, getPublicKeyString());
-        hd.startElement("", "", XMLConstants.SIGNATURE, null);
-        StringBuffer usb = new StringBuffer();
-        String signature = this.signature();
-        usb.append(signature, 0, signature.length());
-        char[] sig = usb.toString().toCharArray();
-        hd.characters(sig, 0, sig.length);
-        hd.endElement("", "", XMLConstants.SIGNATURE);
-
-        hd.endElement("", "", XMLConstants.EXIT_NODE);
-    }
-
-    private void addKey(ContentHandler hd, String key, String value) throws SAXException {
-        hd.startElement("", "", key, null);
-        char[] valArray = value.toCharArray();
-        hd.characters(valArray, 0, valArray.length);
-        hd.endElement("", "", key);
+    public void shortXML(XMLHelper xmlOut) throws SAXException {
+        xmlOut.startElement(XMLHelper.EXIT_NODE);
+        xmlOut.writeTag(XMLHelper.SERVICE_ID, Long.toString(serviceId));
+        xmlOut.writeTag(XMLHelper.PUBLIC_KEY, getPublicKeyString());
+        xmlOut.writeTag(XMLHelper.SIGNATURE, signature());
+        xmlOut.endElement(XMLHelper.EXIT_NODE);
     }
 
     private static class PolicyTree {

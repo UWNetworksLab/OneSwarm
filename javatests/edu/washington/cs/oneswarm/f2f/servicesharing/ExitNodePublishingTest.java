@@ -19,6 +19,7 @@ import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.thread.QueuedThreadPool;
 import org.xml.sax.SAXException;
 
+import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 import edu.washington.cs.oneswarm.test.util.OneSwarmTestBase;
 
 /**
@@ -29,6 +30,7 @@ import edu.washington.cs.oneswarm.test.util.OneSwarmTestBase;
  * 
  */
 public class ExitNodePublishingTest extends OneSwarmTestBase {
+    public long serviceId;
 
     @Test
     public void testExitNodeInfo() throws Exception {
@@ -37,16 +39,16 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
             int port = 7888;
             Thread directoryServer = new Thread(new OSDirectoryServer(port));
             directoryServer.setName("Exit Node Directory Web Server");
-            directoryServer.start();
+            directoryServer.start(); // Wait for server to come online.
+            Thread.sleep(200);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        try {
-
-            // Make sure there are no errors in registering
+        try { // Make sure there are no errors in registering
+            serviceId = ExitNodeList.getInstance().getLocalServiceKey();
             ExitNodeList.getInstance().setExitNodeSharedService(
-                    new ExitNodeInfo("Servo the Magnificent", 123456, 250,
+                    new ExitNodeInfo("Servo the Magnificent", serviceId, 250,
                             new String[] { "accept *.*" }, new Date(), "Version string 2.0"));
             ExitNodeList.getInstance().setDirectoryServer("http://127.0.0.1:7888/");
             ExitNodeList.getInstance().registerExitNodes();
@@ -54,6 +56,7 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
             e.printStackTrace();
             fail(e.getMessage());
         }
+
     }
 
     public class OSDirectoryServer implements Runnable {
@@ -93,13 +96,46 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
                 Request request = (req instanceof Request) ? (Request) req : HttpConnection
                         .getCurrentConnection().getRequest();
 
-                // Respond differently as each step progresses
-                switch (count) {
-                case 0:
-                    resp.getOutputStream().write(
-                            "<ExitNodeList><ExitNode><ServiceId>123456</ServiceId></ExitNode></ExitNodeList>"
-                                    .getBytes(XMLConstants.ENCODING));
-                    break;
+                try {
+
+                    XMLHelper xmlOut = new XMLHelper(resp.getOutputStream());
+
+                    // Respond differently as each step progresses
+                    switch (count) {
+                    // Tell the client that their registration has expired
+                    case 0:
+                        xmlOut.startElement(XMLHelper.EXIT_NODE);
+                        xmlOut.writeTag(XMLHelper.SERVICE_ID, serviceId + "");
+                        xmlOut.writeStatus(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID,
+                                "Unregistered ServiceId.");
+                        xmlOut.endElement(XMLHelper.EXIT_NODE);
+                        xmlOut.close();
+                        break;
+                    // Tell the client that their serviceId is duplicate and
+                    // must be regenerated
+                    case 1:
+                        xmlOut.startElement(XMLHelper.EXIT_NODE);
+                        xmlOut.writeTag(XMLHelper.SERVICE_ID, serviceId + "");
+                        xmlOut.writeStatus(XMLHelper.ERROR_DUPLICATE_SERVICE_ID,
+                                "Duplicate ServiceId.");
+                        xmlOut.endElement(XMLHelper.EXIT_NODE);
+                        xmlOut.close();
+                        break;
+                    // Check that they did in fact regen the serviceId and tell
+                    // them they suceeded
+                    case 2:
+                        long newServiceId = ExitNodeList.getInstance().getLocalServiceKey();
+                        assert (newServiceId != ExitNodePublishingTest.this.serviceId);
+                        xmlOut.startElement(XMLHelper.EXIT_NODE);
+                        xmlOut.writeTag(XMLHelper.SERVICE_ID, newServiceId + "");
+                        xmlOut.writeStatus(XMLHelper.STATUS_SUCCESS, "Success.");
+                        xmlOut.endElement(XMLHelper.EXIT_NODE);
+                        xmlOut.close();
+                        break;
+                    }
+                } catch (SAXException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
                 }
                 count++;
                 request.setHandled(true);
