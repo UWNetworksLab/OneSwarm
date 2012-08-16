@@ -32,7 +32,6 @@ public class XMLHelper {
     public static final String NICKNAME = "Nickname";
     public static final String BANDWIDTH = "Bandwidth";
     public static final String EXIT_POLICY = "ExitPolicy";
-    public static final String ONLINE_SINCE = "OnlineSince";
     public static final String VERSION = "Version";
     public static final String SIGNATURE = "Signature";
 

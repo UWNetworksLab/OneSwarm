@@ -3,19 +3,22 @@ package edu.washington.cs.oneswarm.f2f.servicesharing;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.SortedSet;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.xml.sax.SAXException;
 
+import edu.washington.cs.oneswarm.f2f.xml.DirectoryServerMsgHandler;
+import edu.washington.cs.oneswarm.f2f.xml.ExitNodeInfoHandler;
 import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 
 public class ExitNodeList {
@@ -25,8 +28,9 @@ public class ExitNodeList {
     private static final String LOCAL_SERVICE_KEY_CONFIG_KEY = "DISTINGUISHED_SHARED_SERVICE_KEY";
     private static final String DIRECTORY_SERVER_URL_CONFIG_KEY = "DIRECTORY_SERVER_URL_CONFIG_KEY";
     private static final long KEEPALIVE_INTERVAL = 55 * 60 * 1000;
+    private static final long DIRECTORY_SERVER_REFRESH_INTERVAL = 55 * 60 * 1000;
 
-    private final List<ExitNodeInfo> exitNodeList;
+    private final SortedSet<ExitNodeInfo> exitNodeList;
     private final Map<Long, ExitNodeInfo> localSharedExitServices;
 
     private ExitNodeList() {
@@ -45,7 +49,23 @@ public class ExitNodeList {
                 }
             }
         }, KEEPALIVE_INTERVAL / 2, KEEPALIVE_INTERVAL);
-        this.exitNodeList = new LinkedList<ExitNodeInfo>();
+
+        keepAliveRegistrations.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    ExitNodeList.this.refreshFromDirectoryServer();
+                } catch (IOException e) {
+                    // Unexpected
+                    e.printStackTrace();
+                } catch (SAXException e) {
+                    // Unexpected
+                    e.printStackTrace();
+                }
+            }
+        }, 5 * 1000, DIRECTORY_SERVER_REFRESH_INTERVAL);
+
+        this.exitNodeList = new TreeSet<ExitNodeInfo>();
         this.localSharedExitServices = new HashMap<Long, ExitNodeInfo>();
     }
 
@@ -66,7 +86,7 @@ public class ExitNodeList {
     }
 
     private void sortAndSave() {
-        Collections.sort(exitNodeList);
+        // No need to sort a sorted set
         // TODO (nick) serialize and save list to disk
     }
 
@@ -134,16 +154,36 @@ public class ExitNodeList {
         }
     }
 
-    // TODO (nick) remove suppress warnings
+    protected void refreshFromDirectoryServer() throws IOException, SAXException {
+        String exitNodeDirectoryUrl = getDirectoryServerUrl();
+        if (exitNodeDirectoryUrl.equals("")) {
+            log.warning("Could not retrive ExitNodes from directory server. No directory server URL set.");
+            return;
+        }
+        HttpURLConnection conn = createConnectionTo(exitNodeDirectoryUrl + "?action=list");
+        List<ExitNodeInfo> exitNodes = new LinkedList<ExitNodeInfo>();
+        XMLHelper.parse(conn.getInputStream(), new ExitNodeInfoHandler(exitNodes));
+        conn.disconnect();
+
+        for (ExitNodeInfo node : exitNodes) {
+            // TODO (nick) implement partial update functionality and allow
+            // nodes to be removed if they have a flag
+            if (exitNodeList.contains(node)) {
+                exitNodeList.remove(node);
+            }
+            exitNodeList.add(node);
+        }
+    }
+
     public void registerExitNodes() throws IOException, SAXException {
         String exitNodeDirectoryUrl = getDirectoryServerUrl();
-        if (exitNodeDirectoryUrl == "") {
+        if (exitNodeDirectoryUrl.equals("")) {
             new IllegalArgumentException("No DirectoryServer Specified.").printStackTrace();
             return;
         }
         HttpURLConnection conn = createConnectionTo(exitNodeDirectoryUrl + "?action=checkin");
+        conn.setRequestProperty("Content-Type", "text/xml");
         XMLHelper xmlOut = new XMLHelper(conn.getOutputStream());
-
         // Write check-in request to the connection
         for (ExitNodeInfo node : localSharedExitServices.values()) {
             node.shortXML(xmlOut);
@@ -167,6 +207,7 @@ public class ExitNodeList {
 
             // Otherwise, retry the nodes that need ro be registered
             conn = createConnectionTo(exitNodeDirectoryUrl + "?action=register");
+            conn.setRequestProperty("Content-Type", "text/xml");
             xmlOut = new XMLHelper(conn.getOutputStream());
             // Write register request to the connection
             for (ExitNodeInfo node : toReRegister) {
@@ -215,7 +256,7 @@ public class ExitNodeList {
         req.setDoInput(true);
         req.setDoOutput(true);
         req.setUseCaches(false);
-        req.setRequestProperty("Content-Type", "text/xml");
+        // req.setRequestProperty("Content-Type", "text/xml");
         return req;
     }
 }

@@ -1,5 +1,7 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -31,6 +33,7 @@ import edu.washington.cs.oneswarm.test.util.OneSwarmTestBase;
  */
 public class ExitNodePublishingTest extends OneSwarmTestBase {
     public long serviceId;
+    public ExitNodeInfo node;
 
     @Test
     public void testExitNodeInfo() throws Exception {
@@ -45,18 +48,27 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
             e.printStackTrace();
         }
 
+        // Set the ExitNodeList to use our local DirectoryServer
+        ExitNodeList.getInstance().setDirectoryServer("http://127.0.0.1:7888/");
+
         try { // Make sure there are no errors in registering
             serviceId = ExitNodeList.getInstance().getLocalServiceKey();
-            ExitNodeList.getInstance().setExitNodeSharedService(
-                    new ExitNodeInfo("Servo the Magnificent", serviceId, 250,
-                            new String[] { "accept *.*" }, new Date(), "Version string 2.0"));
-            ExitNodeList.getInstance().setDirectoryServer("http://127.0.0.1:7888/");
+            node = new ExitNodeInfo("Servo the Magnificent", serviceId, 250,
+                    new String[] { "accept *.*" }, new Date(), "Version string 2.0");
+            ExitNodeList.getInstance().setExitNodeSharedService(node);
             ExitNodeList.getInstance().registerExitNodes();
         } catch (Exception e) {
             e.printStackTrace();
             fail(e.getMessage());
         }
 
+        // Verify that the client successfully registered by having it download
+        // its registration and making sure the service key matches the one we
+        // made. Note: <code>this.serviceId</code> points now to the new
+        // serviceId we asked the client to generate, not the original one.
+        ExitNodeList.getInstance().refreshFromDirectoryServer();
+        ExitNodeInfo node = ExitNodeList.getInstance().pickServer("google.com", 80);
+        assertEquals(serviceId, node.getId());
     }
 
     public class OSDirectoryServer implements Runnable {
@@ -99,7 +111,6 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
                 try {
 
                     XMLHelper xmlOut = new XMLHelper(resp.getOutputStream());
-
                     // Respond differently as each step progresses
                     switch (count) {
                     // Tell the client that their registration has expired
@@ -109,7 +120,6 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
                         xmlOut.writeStatus(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID,
                                 "Unregistered ServiceId.");
                         xmlOut.endElement(XMLHelper.EXIT_NODE);
-                        xmlOut.close();
                         break;
                     // Tell the client that their serviceId is duplicate and
                     // must be regenerated
@@ -119,20 +129,26 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
                         xmlOut.writeStatus(XMLHelper.ERROR_DUPLICATE_SERVICE_ID,
                                 "Duplicate ServiceId.");
                         xmlOut.endElement(XMLHelper.EXIT_NODE);
-                        xmlOut.close();
                         break;
                     // Check that they did in fact regen the serviceId and tell
                     // them they suceeded
                     case 2:
                         long newServiceId = ExitNodeList.getInstance().getLocalServiceKey();
-                        assert (newServiceId != ExitNodePublishingTest.this.serviceId);
+                        assertFalse(newServiceId == ExitNodePublishingTest.this.serviceId);
+                        ExitNodePublishingTest.this.serviceId = newServiceId;
                         xmlOut.startElement(XMLHelper.EXIT_NODE);
                         xmlOut.writeTag(XMLHelper.SERVICE_ID, newServiceId + "");
                         xmlOut.writeStatus(XMLHelper.STATUS_SUCCESS, "Success.");
                         xmlOut.endElement(XMLHelper.EXIT_NODE);
-                        xmlOut.close();
+                        break;
+                    case 3:
+                        node.fullXML(xmlOut);
+                        break;
+                    default:
+                        fail();
                         break;
                     }
+                    xmlOut.close();
                 } catch (SAXException e) {
                     e.printStackTrace();
                     fail(e.getMessage());

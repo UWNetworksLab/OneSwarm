@@ -1,4 +1,4 @@
-package edu.washington.cs.oneswarm.f2f.servicesharing;
+package edu.washington.cs.oneswarm.f2f.xml;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
+import edu.washington.cs.oneswarm.f2f.servicesharing.DirectoryServerMsg;
 
 public class DirectoryServerMsgHandler extends DefaultHandler {
     private DirectoryServerMsg tempMsg;

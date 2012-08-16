@@ -55,6 +55,13 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     }
 
     /**
+     * For use by XMLParser. Allows creation of invalid ExitNode
+     */
+    public ExitNodeInfo() {
+        this("INVALID", 0, 0, new String[] { "reject *:*" }, null, "INVALID");
+    }
+
+    /**
      * Sets the exit policy of the server using Tor's notation.
      * 
      * The format is: (reject|accept) (domain|ip)[:port] with one policy per
@@ -94,6 +101,21 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         return thisBandwidth - otherBandwidth;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        } else if (other instanceof ExitNodeInfo) {
+            return this.serviceId == ((ExitNodeInfo) other).serviceId;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) serviceId;
+    }
+
     public String getNickname() {
         return nickname;
     }
@@ -119,6 +141,38 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     public String getPublicKeyString() {
         return this.publicKey.getAlgorithm() + ":" + this.publicKey.getFormat() + ":"
                 + Base64.encode(this.publicKey.getEncoded());
+    }
+
+    /**
+     * See <code>getPublicKeyString()</code> for format.
+     * 
+     * @param key
+     */
+    public void setPublicKeyString(String key) {
+        if (key == null || key.length() < 1) {
+            return;
+        }
+
+        final String[] parts = key.split(":");
+        publicKey = new PublicKey() {
+            private static final long serialVersionUID = -7259961818850093509L;
+
+            @Override
+            public String getAlgorithm() {
+                return parts[0];
+            }
+
+            @Override
+            public String getFormat() {
+                return parts[1];
+            }
+
+            @Override
+            public byte[] getEncoded() {
+                return Base64.decode(parts[2]);
+            }
+        };
+        privateKey = null;
     }
 
     public int getAdvertizedBandwith() {
