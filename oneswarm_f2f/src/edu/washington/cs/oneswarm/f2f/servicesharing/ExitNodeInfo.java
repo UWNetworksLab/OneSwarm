@@ -1,7 +1,9 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
 import java.io.UnsupportedEncodingException;
-import java.security.KeyPair;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
@@ -14,22 +16,25 @@ import java.util.Queue;
 
 import org.xml.sax.SAXException;
 
+import sun.security.x509.CertAndKeyGen;
+
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
-import edu.uw.cse.netlab.reputation.LocalIdentity;
 import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 
 public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     // Publicly available info
     private String nickname;
     private long serviceId;
-    private PublicKey publicKey;
-    private PrivateKey privateKey;
     private byte[] ipAddr;
     private int advertizedBandwidth;
     private PolicyTree exitPolicy;
     private Date onlineSince;
     private String version;
+
+    public static final int KEY_SIZE_BITS = 1024;
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
 
     // Private data stored about this exit node
     private static final int HISTORY_LENGTH = 10; // Must be >= 3
@@ -37,17 +42,15 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     private int avgBandwidth; // Stored avg of history (KB/s)
     private Queue<Integer> latencyHistory;
     private int avgLatency; // Stored avg of history (ms)
-    
-    public static final LinkedList<String> EVERYTHING =  new LinkedList<String>(Arrays.asList("allow *:*"));
-    public static final LinkedList<String> LOCAL =  new LinkedList<String>(Arrays.asList("allow localhost:80"));
+
+    public static final LinkedList<String> EVERYTHING = new LinkedList<String>(
+            Arrays.asList("allow *:*"));
+    public static final LinkedList<String> LOCAL = new LinkedList<String>(
+            Arrays.asList("allow localhost:80"));
     // TODO(willscott): Expand this list.
-    public static final LinkedList<String> SAFE =  new LinkedList<String>(Arrays.asList(
-            "allow google.com:*",
-            "allow *.google.com:*",
-            "allow gmail.com:*",
-            "allow googleusercontent.com:*",
-            "allow wikipedia.org:*",
-            "allow *.wikipedia.org:*"));
+    public static final LinkedList<String> SAFE = new LinkedList<String>(Arrays.asList(
+            "allow google.com:*", "allow *.google.com:*", "allow gmail.com:*",
+            "allow googleusercontent.com:*", "allow wikipedia.org:*", "allow *.wikipedia.org:*"));
 
     public ExitNodeInfo(String nickname, long id, int advertBandwidth, String[] exitPolicy,
             Date onlineSince, String version) {
@@ -58,13 +61,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         this.onlineSince = onlineSince;
         this.version = version;
 
-        try {
-            KeyPair keys = LocalIdentity.get().loadOrGenerateKeys();
-            this.privateKey = keys.getPrivate();
-            this.publicKey = keys.getPublic();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        generateNewKeys();
     }
 
     /**
@@ -73,7 +70,6 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     public ExitNodeInfo() {
         this("INVALID", 0, 0, new String[] { "reject *:*" }, null, "INVALID");
     }
-    
 
     /**
      * Sets the exit policy of the server using Tor's notation.
@@ -114,11 +110,12 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         }
         return thisBandwidth - otherBandwidth;
     }
-    
+
     public LinkedList<String> getPolicyStrings() {
         LinkedList<String> policies = new LinkedList<String>();
-        ListIterator<edu.washington.cs.oneswarm.f2f.servicesharing.ExitNodeInfo.PolicyTree.PolicyNode> itr = exitPolicy.root.children.listIterator();
-        while(itr.hasNext()) {
+        ListIterator<edu.washington.cs.oneswarm.f2f.servicesharing.ExitNodeInfo.PolicyTree.PolicyNode> itr = exitPolicy.root.children
+                .listIterator();
+        while (itr.hasNext()) {
             policies.add(itr.next().toString());
         }
         return policies;
@@ -142,7 +139,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     public String getNickname() {
         return nickname;
     }
-    
+
     public void setNickname(String nickname) {
         this.nickname = nickname;
     }
@@ -283,6 +280,22 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void generateNewKeys() {
+        try {
+            CertAndKeyGen keyPair = new CertAndKeyGen("RSA", "SHA1withRSA", null);
+            keyPair.generate(KEY_SIZE_BITS);
+
+            publicKey = keyPair.getPublicKey();
+            privateKey = keyPair.getPrivateKey();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
     }
 
     public void fullXML(XMLHelper xmlOut) throws SAXException {
