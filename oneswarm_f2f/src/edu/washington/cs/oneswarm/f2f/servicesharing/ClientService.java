@@ -70,6 +70,11 @@ public class ClientService implements RoutingListener, Comparable<ClientService>
 
     @Override
     public void connectionRouted(final NetworkConnection incomingConnection, Object routing_data) {
+        connectionRouted(incomingConnection, routing_data, null);
+    }
+
+    public void connectionRouted(final NetworkConnection incomingConnection, Object routing_data,
+            final ServiceConnectionDelegate delegate) {
         ServiceSharingManager.logger.fine("connection routed");
         final SharedService sharedService = ServiceSharingManager.getInstance().getSharedService(
                 serverSearchKey);
@@ -81,25 +86,24 @@ public class ClientService implements RoutingListener, Comparable<ClientService>
             loopback.connect();
         } else {
             if (!ServiceConnectionManager.getInstance().requestService(incomingConnection,
-                    serverSearchKey)) {
+                    serverSearchKey, delegate)) {
                 final AtomicBoolean responded = new AtomicBoolean(false);
                 ServiceSharingManager.logger.finer("sending search to " + serverSearchKey);
                 SearchManager searchManager = OSF2FMain.getSingelton().getOverlayManager()
-                    .getSearchManager();
+                        .getSearchManager();
                 searchManager.sendServiceSearch(serverSearchKey, new HashSearchListener() {
                     @Override
                     public void searchResponseReceived(OSF2FHashSearch search,
-                            FriendConnection source,
-                        OSF2FHashSearchResp msg) {
-                        ServiceConnectionManager.getInstance()
-                            .createChannel(source, search, msg, true);
+                            FriendConnection source, OSF2FHashSearchResp msg) {
+                        ServiceConnectionManager.getInstance().createChannel(source, search, msg,
+                                true);
                         // Once a channel exists to associate with, we can
                         // handle the external network connection.
                         if (responded.getAndSet(true) == false) {
                             ServiceConnectionManager.getInstance().requestService(
-                                    incomingConnection, serverSearchKey);
+                                    incomingConnection, serverSearchKey, delegate);
                         }
-                    // Limit number of multiplexed channels.
+                        // Limit number of multiplexed channels.
                     }
                 });
             }
@@ -141,8 +145,8 @@ public class ClientService implements RoutingListener, Comparable<ClientService>
         int port = COConfigurationManager.getIntParameter(getPortKey(), -1);
         return port;
     }
-    
-    public long getServerSeachKey(){
+
+    public long getServerSeachKey() {
         return serverSearchKey;
     }
 

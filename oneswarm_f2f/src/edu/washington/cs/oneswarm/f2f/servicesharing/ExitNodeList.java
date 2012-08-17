@@ -90,6 +90,15 @@ public class ExitNodeList {
         // TODO (nick) serialize and save list to disk
     }
 
+    public ExitNodeInfo getServerByKey(long serviceId) {
+        for (ExitNodeInfo node : exitNodeList) {
+            if (node.getId() == serviceId) {
+                return node;
+            }
+        }
+        return null;
+    }
+
     public ExitNodeInfo pickServer(String url, int port) {
         for (ExitNodeInfo server : exitNodeList) {
             if (server.allowsConnectionTo(url, port)) {

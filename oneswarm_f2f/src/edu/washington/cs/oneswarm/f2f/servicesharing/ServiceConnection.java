@@ -37,6 +37,8 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
             "SERVICE_CLIENT_channels", 4);
     protected final EnumSet<ServiceFeatures> FEATURES;
 
+    private ServiceConnectionDelegate delegate;
+
     private class BufferedMessage {
         public BufferedMessage(DirectByteBuffer msg, SequenceNumber msgId) {
             this.messageId = msgId;
@@ -109,6 +111,13 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
                 + ", "
                 + (features.contains(ServiceFeatures.ADAPTIVE_DUPLICATION) ? "Adaptive"
                         : "Not Adapitive"));
+        if (delegate != null) {
+            delegate.connected(this);
+        }
+    }
+
+    public void setDelegate(ServiceConnectionDelegate delegate) {
+        this.delegate = delegate;
     }
 
     public boolean isOutgoing() {
@@ -175,8 +184,8 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
                     if (!serviceChannelEOF) {
                         logger.info("End of service channel input stream.");
                         serviceChannelEOF = true;
-                        ServiceConnection.this.routeMessageToChannel(
-                            new DirectByteBuffer(ByteBuffer.allocate(0)), null);
+                        ServiceConnection.this.routeMessageToChannel(new DirectByteBuffer(
+                                ByteBuffer.allocate(0)), null);
                     }
                     if (!serviceChannel.isConnected()) {
                         ServiceConnection.this.close("Service Channel Closed");
@@ -199,17 +208,21 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
         if (this.networkChannels.size() > 0) {
             destination = "" + this.networkChannels.get(0).getServiceKey();
         }
-        return "Service connection " + this.subchannelId + " to " + destination
-                + " over " + this.networkChannels.size() + " channels";
+        return "Service connection " + this.subchannelId + " to " + destination + " over "
+                + this.networkChannels.size() + " channels";
     }
 
     public void close(String reason) {
+        if (delegate != null) {
+            delegate.closing(this);
+        }
         logger.info("Service Connection closed: " + reason);
 
         ChannelBufferInfo b = new ChannelBufferInfo();
         List<ServiceChannelEndpoint> openChannels = getAvailableChannels(null, b);
 
-        ServiceChannelEndpoint[] channels = this.networkChannels.toArray(new ServiceChannelEndpoint[0]);
+        ServiceChannelEndpoint[] channels = this.networkChannels
+                .toArray(new ServiceChannelEndpoint[0]);
         this.networkChannels.clear();
         if (openChannels.size() > 0 && !networkChannelEOF) {
             // Send RST Packet.
@@ -339,7 +352,8 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
                 logger.warning("Incoming service message dropped, exceeded message buffer.");
                 return true;
             } else if (msg.getSequenceNumber() < serviceSequenceNumber) {
-                logger.info("Incoming service message dropped, already processed [flow " + msg.getSubchannel() + " message " + msg.getSequenceNumber() + "]");
+                logger.info("Incoming service message dropped, already processed [flow "
+                        + msg.getSubchannel() + " message " + msg.getSequenceNumber() + "]");
                 return true;
             } else {
                 DirectByteBuffer payload = msg.transferPayload();
@@ -381,15 +395,10 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
                     return;
                 }
                 /*
-                 * int pos = buf.position((byte) 0);
-                 * int len = buf.remaining((byte) 0);
-                 * byte[] temp = new byte[len];
-                 * buf.get((byte) 0, temp);
-                 * for (int i = 0; i < len; i++) {
-                 * if (temp[i] == 0) {
-                 * temp[i] = (byte) 0xff;
-                 * }
-                 * }
+                 * int pos = buf.position((byte) 0); int len =
+                 * buf.remaining((byte) 0); byte[] temp = new byte[len];
+                 * buf.get((byte) 0, temp); for (int i = 0; i < len; i++) { if
+                 * (temp[i] == 0) { temp[i] = (byte) 0xff; } }
                  * System.out.println("!!!MSG to Service: " + new String(temp));
                  * buf.position((byte) 0, pos);
                  */

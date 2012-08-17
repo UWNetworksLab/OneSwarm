@@ -14,9 +14,9 @@ import edu.washington.cs.oneswarm.f2f.network.FriendConnection;
 import edu.washington.cs.oneswarm.f2f.network.FriendConnection.OverlayRegistrationError;
 
 /**
- * This class manages active service connections (ServiceChannelEndpoints.)
- * Each channel can be used for multiple connections, such that a client can
- * initiate follow-on connections to a service without re-executing a search.
+ * This class manages active service connections (ServiceChannelEndpoints.) Each
+ * channel can be used for multiple connections, such that a client can initiate
+ * follow-on connections to a service without re-executing a search.
  * 
  * @author willscott
  * 
@@ -57,8 +57,8 @@ public class ServiceConnectionManager implements ServiceChannelEndpointDelegate 
      */
     public ServiceChannelEndpoint createChannel(FriendConnection nextHop, OSF2FHashSearch search,
             OSF2FHashSearchResp response, boolean outgoing) {
-        ServiceChannelEndpoint channel = new ServiceChannelEndpoint(nextHop, search,
-                response, outgoing);
+        ServiceChannelEndpoint channel = new ServiceChannelEndpoint(nextHop, search, response,
+                outgoing);
         try {
             nextHop.registerOverlayTransport(channel);
         } catch (OverlayRegistrationError e) {
@@ -203,6 +203,11 @@ public class ServiceConnectionManager implements ServiceChannelEndpointDelegate 
     }
 
     public boolean requestService(NetworkConnection incomingConnection, long serverSearchKey) {
+        return requestService(incomingConnection, serverSearchKey, null);
+    }
+
+    public boolean requestService(NetworkConnection incomingConnection, long serverSearchKey,
+            ServiceConnectionDelegate delegate) {
         // Create a new sub flow if channels exist, or note the request for when
         // one does.
         Collection<ServiceChannelEndpoint> channels = this.getChannelsForService(serverSearchKey);
@@ -211,6 +216,7 @@ public class ServiceConnectionManager implements ServiceChannelEndpointDelegate 
             long searchKey = channels.iterator().next().getSearchKey();
             ServiceConnection c = new ServiceConnection(true, subchannel, searchKey,
                     incomingConnection);
+            c.setDelegate(delegate);
             for (ServiceChannelEndpoint channel : channels) {
                 c.addChannel(channel);
             }
