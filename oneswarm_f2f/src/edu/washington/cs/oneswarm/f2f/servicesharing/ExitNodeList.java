@@ -165,12 +165,18 @@ public class ExitNodeList {
         XMLHelper.parse(conn.getInputStream(), new ExitNodeInfoHandler(exitNodes));
         conn.disconnect();
 
+        // TODO (nick) remove when partial update is ready
+        exitNodeList.clear();
+
         for (ExitNodeInfo node : exitNodes) {
             // TODO (nick) implement partial update functionality and allow
             // nodes to be removed if they have a flag
-            if (exitNodeList.contains(node)) {
-                exitNodeList.remove(node);
-            }
+            // if (exitNodeList.contains(node)) {
+            // exitNodeList.remove(node);
+            // }
+            // if(!node.flaggedForRemoval){
+            // exitNodeList.add(node);
+            // }
             exitNodeList.add(node);
         }
     }
