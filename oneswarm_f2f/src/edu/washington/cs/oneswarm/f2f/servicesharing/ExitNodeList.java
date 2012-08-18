@@ -137,7 +137,12 @@ public class ExitNodeList {
      * identity.
      */
     public void resetLocalServiceKey() {
-        localSharedExitServices.get(getLocalServiceKey()).generateNewKeys();
+        ExitNodeInfo localService = localSharedExitServices.get(getLocalServiceKey());
+        if (localService == null) {
+            localService = new ExitNodeInfo();
+            setExitNodeSharedService(localService);
+        }
+        localService.generateNewKeys();
         COConfigurationManager.setParameter(LOCAL_SERVICE_KEY_CONFIG_KEY, 0L);
     }
 
