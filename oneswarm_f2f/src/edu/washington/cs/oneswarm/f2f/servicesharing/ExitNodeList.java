@@ -3,15 +3,14 @@ package edu.washington.cs.oneswarm.f2f.servicesharing;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.SortedSet;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import org.gudy.azureus2.core3.config.COConfigurationManager;
@@ -30,7 +29,7 @@ public class ExitNodeList {
     private static final long KEEPALIVE_INTERVAL = 55 * 60 * 1000;
     private static final long DIRECTORY_SERVER_REFRESH_INTERVAL = 55 * 60 * 1000;
 
-    private final SortedSet<ExitNodeInfo> exitNodeList;
+    private final List<ExitNodeInfo> exitNodeList;
     private final Map<Long, ExitNodeInfo> localSharedExitServices;
 
     private ExitNodeList() {
@@ -65,14 +64,14 @@ public class ExitNodeList {
             }
         }, 5 * 1000, DIRECTORY_SERVER_REFRESH_INTERVAL);
 
-        this.exitNodeList = new TreeSet<ExitNodeInfo>();
+        this.exitNodeList = new LinkedList<ExitNodeInfo>();
         this.localSharedExitServices = new HashMap<Long, ExitNodeInfo>();
     }
 
     public static ExitNodeList getInstance() {
         return instance;
     }
-    
+
     public void addNodes(ExitNodeInfo[] exitNodes) {
         for (ExitNodeInfo server : exitNodes) {
             this.exitNodeList.add(server);
@@ -86,7 +85,7 @@ public class ExitNodeList {
     }
 
     private void sortAndSave() {
-        // No need to sort a sorted set
+        Collections.sort(exitNodeList);
         // TODO (nick) serialize and save list to disk
     }
 
@@ -138,6 +137,7 @@ public class ExitNodeList {
      * identity.
      */
     public void resetLocalServiceKey() {
+        localSharedExitServices.get(getLocalServiceKey()).generateNewKeys();
         COConfigurationManager.setParameter(LOCAL_SERVICE_KEY_CONFIG_KEY, 0L);
     }
 
@@ -154,9 +154,10 @@ public class ExitNodeList {
     public boolean isExitNodeSharedService(long serviceId) {
         return localSharedExitServices.containsKey(serviceId);
     }
-    
+
     public ExitNodeInfo getExitNodeSharedService(long serviceId) {
-        return localSharedExitServices.get(serviceId);  //TODO(ben) does this have a default? 
+        return localSharedExitServices.get(serviceId); // TODO(ben) does this
+                                                       // have a default?
     }
 
     public boolean allowLocalExitConnection(long serviceId, String address, int port) {
