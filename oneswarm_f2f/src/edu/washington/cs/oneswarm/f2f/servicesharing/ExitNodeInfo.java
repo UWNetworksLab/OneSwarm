@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Queue;
 
 import org.xml.sax.SAXException;
@@ -52,6 +51,8 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     public static final LinkedList<String> SAFE = new LinkedList<String>(Arrays.asList(
             "allow google.com:*", "allow *.google.com:*", "allow gmail.com:*",
             "allow googleusercontent.com:*", "allow wikipedia.org:*", "allow *.wikipedia.org:*"));
+
+    public static final char COMMENT_CHAR = '#';
 
     public ExitNodeInfo(String nickname, long id, int advertBandwidth, String[] exitPolicy,
             Date onlineSince, String version) {
@@ -113,14 +114,8 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         return thisBandwidth - otherBandwidth;
     }
 
-    public LinkedList<String> getPolicyStrings() {
-        LinkedList<String> policies = new LinkedList<String>();
-        ListIterator<edu.washington.cs.oneswarm.f2f.servicesharing.ExitNodeInfo.PolicyTree.PolicyNode> itr = exitPolicy.root.children
-                .listIterator();
-        while (itr.hasNext()) {
-            policies.add(itr.next().toString());
-        }
-        return policies;
+    public List<String> getPolicyStrings() {
+        return exitPolicy.policyStringsAsEntered;
     }
 
     @Override
@@ -331,9 +326,11 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     private static class PolicyTree {
         private PolicyNode root;
         private final StringBuilder policyString;
+        private final List<String> policyStringsAsEntered;
 
         public PolicyTree(String[] policy) {
             policyString = new StringBuilder();
+            policyStringsAsEntered = new LinkedList<String>();
             root = new PolicyNode("");
             addPolicies(policy);
         }
@@ -345,8 +342,20 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         }
 
         public void addPolicy(String policy) {
-            policyString.append(policy + ",");
+            policyStringsAsEntered.add(policy);
             policy = policy.toLowerCase();
+
+            // Remove comments from published version and before adding into
+            // data structure
+            int commentIndex = policy.lastIndexOf(COMMENT_CHAR);
+            if (commentIndex >= 0) {
+                policy = policy.substring(0, commentIndex);
+            }
+            if (policy.trim().equals("")) {
+                return;
+            }
+
+            policyString.append(policy + ",");
             PolicyValue policyVal;
             int port;
 

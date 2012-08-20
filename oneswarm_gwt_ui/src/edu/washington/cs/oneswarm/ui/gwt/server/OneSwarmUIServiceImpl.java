@@ -4225,18 +4225,21 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
             throw new RuntimeException("invalid cookie");
         }
     }
-    
+
+    @Override
     public void getNewServiceKey() {
         ExitNodeList.getInstance().resetLocalServiceKey();
     }
-    
+
+    @Override
     public void setExitNodeSharedService(String exitNodes) {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
         instance.getExitNodeSharedService(key).setExitPolicy(exitNodes.split("\\r?\\n"));
     }
-    
-    public LinkedList<String> getExitPolicyStrings() {
+
+    @Override
+    public List<String> getExitPolicyStrings() {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
         ExitNodeInfo info = instance.getExitNodeSharedService(key);
@@ -4244,7 +4247,7 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
             return info.getPolicyStrings();
         } else {
             return new LinkedList<String>();
-        }        
+        }
     }
 
     @Override
@@ -4253,18 +4256,20 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
         long key = instance.getLocalServiceKey();
         return instance.getExitNodeSharedService(key).getNickname();
     }
-    
+
+    @Override
     public void setNickname(String nickname) {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
         instance.getExitNodeSharedService(key).setNickname(nickname);
     }
-    
-    public LinkedList<String> getPresetPolicy(String sender) {
-//        ExitNodeList instance = ExitNodeList.getInstance();
-//        long key = instance.getLocalServiceKey();
-//        ExitNodeInfo exit =  instance.getExitNodeSharedService(key);
-//        
+
+    @Override
+    public List<String> getPresetPolicy(String sender) {
+        // ExitNodeList instance = ExitNodeList.getInstance();
+        // long key = instance.getLocalServiceKey();
+        // ExitNodeInfo exit = instance.getExitNodeSharedService(key);
+        //
         if (sender.equals("everything")) {
             return ExitNodeInfo.EVERYTHING;
         } else if (sender.equals("local")) {
