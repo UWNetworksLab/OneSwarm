@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Queue;
 
 import org.xml.sax.SAXException;
@@ -115,14 +114,8 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         return thisBandwidth - otherBandwidth;
     }
 
-    public LinkedList<String> getPolicyStrings() {
-        LinkedList<String> policies = new LinkedList<String>();
-        ListIterator<edu.washington.cs.oneswarm.f2f.servicesharing.ExitNodeInfo.PolicyTree.PolicyNode> itr = exitPolicy.root.children
-                .listIterator();
-        while (itr.hasNext()) {
-            policies.add(itr.next().toString());
-        }
-        return policies;
+    public List<String> getPolicyStrings() {
+        return exitPolicy.policyStringsAsEntered;
     }
 
     @Override
@@ -333,11 +326,11 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     private static class PolicyTree {
         private PolicyNode root;
         private final StringBuilder policyString;
-        private final StringBuilder policyStringAsEntered;
+        private final List<String> policyStringsAsEntered;
 
         public PolicyTree(String[] policy) {
             policyString = new StringBuilder();
-            policyStringAsEntered = new StringBuilder();
+            policyStringsAsEntered = new LinkedList<String>();
             root = new PolicyNode("");
             addPolicies(policy);
         }
@@ -349,7 +342,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         }
 
         public void addPolicy(String policy) {
-            policyStringAsEntered.append(policy + "\n");
+            policyStringsAsEntered.add(policy);
             policy = policy.toLowerCase();
 
             // Remove comments from published version and before adding into
@@ -438,10 +431,6 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         @Override
         public String toString() {
             return policyString.toString();
-        }
-
-        public String toStringWithComments() {
-            return policyStringAsEntered.toString();
         }
 
         private enum PolicyValue {

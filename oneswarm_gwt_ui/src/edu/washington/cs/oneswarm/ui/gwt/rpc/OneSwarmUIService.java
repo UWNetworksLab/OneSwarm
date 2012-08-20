@@ -2,7 +2,6 @@ package edu.washington.cs.oneswarm.ui.gwt.rpc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import com.google.gwt.user.client.rpc.RemoteService;
@@ -292,16 +291,16 @@ public interface OneSwarmUIService extends RemoteService {
     void addClientService(String sessionID, long id, String name);
 
     String activateClientService(String session, String name, long id);
-    
+
     void getNewServiceKey();
-    
+
     void setExitNodeSharedService(String exitNodes);
-    
-    LinkedList<String> getExitPolicyStrings();
-    
+
+    List<String> getExitPolicyStrings();
+
     String getNickname();
-    
+
     void setNickname(String nickname);
 
-    LinkedList<String> getPresetPolicy(String sender);
+    List<String> getPresetPolicy(String sender);
 }
