@@ -2,7 +2,6 @@ package edu.washington.cs.oneswarm.ui.gwt.rpc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -333,11 +332,11 @@ public interface OneSwarmUIServiceAsync {
 
     void setExitNodeSharedService(String exitNodes, AsyncCallback<Void> callback);
 
-    void getExitPolicyStrings(AsyncCallback<LinkedList<String>> callback);
+    void getExitPolicyStrings(AsyncCallback<List<String>> callback);
 
     void getNickname(AsyncCallback<String> callback);
 
     void setNickname(String nickname, AsyncCallback<Void> callback);
 
-    void getPresetPolicy(String sender, AsyncCallback<LinkedList<String>> asyncCallback);
+    void getPresetPolicy(String sender, AsyncCallback<List<String>> asyncCallback);
 }

@@ -1,9 +1,11 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
-import static org.junit.Assert.*;
-import org.junit.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.fail;
 
 import java.util.Date;
+
+import org.junit.Test;
 
 import edu.washington.cs.oneswarm.test.util.OneSwarmTestBase;
 
@@ -29,9 +31,9 @@ public class ExitNodePolicyTest extends OneSwarmTestBase {
          */
 
         try {
-            String[] policy = new String[] { "reject yahoo.com", "accept *:80",
-                    "reject *.google.com:40", "accept google.com:40", "reject *.2.*.*:40",
-                    "accept 4.*.2.2:40", "reject *:*" };
+            String[] policy = new String[] { "reject yahoo.com #test comment",
+                    "accept *:80 # google.com", "reject *.google.com:40", "#full line comment",
+                    "accept google.com:40", "reject *.2.*.*:40", "accept 4.*.2.2:40", "reject *:*" };
 
             ExitNodeInfo server = new ExitNodeInfo("Servo The Magnificent", 123456789, 275, policy,
                     new Date(), "Version string 2.0");
@@ -55,6 +57,8 @@ public class ExitNodePolicyTest extends OneSwarmTestBase {
             }
 
             assertArrayEquals(expected, actual);
+
+            assertArrayEquals(policy, server.getPolicyStrings().toArray());
 
         } catch (Exception e) {
             fail(e.toString());
