@@ -53,6 +53,8 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
             "allow google.com:*", "allow *.google.com:*", "allow gmail.com:*",
             "allow googleusercontent.com:*", "allow wikipedia.org:*", "allow *.wikipedia.org:*"));
 
+    public static final char COMMENT_CHAR = '#';
+
     public ExitNodeInfo(String nickname, long id, int advertBandwidth, String[] exitPolicy,
             Date onlineSince, String version) {
         this.nickname = nickname;
@@ -331,9 +333,11 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     private static class PolicyTree {
         private PolicyNode root;
         private final StringBuilder policyString;
+        private final StringBuilder policyStringAsEntered;
 
         public PolicyTree(String[] policy) {
             policyString = new StringBuilder();
+            policyStringAsEntered = new StringBuilder();
             root = new PolicyNode("");
             addPolicies(policy);
         }
@@ -345,8 +349,20 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         }
 
         public void addPolicy(String policy) {
-            policyString.append(policy + ",");
+            policyStringAsEntered.append(policy + "\n");
             policy = policy.toLowerCase();
+
+            // Remove comments from published version and before adding into
+            // data structure
+            int commentIndex = policy.lastIndexOf(COMMENT_CHAR);
+            if (commentIndex >= 0) {
+                policy = policy.substring(0, commentIndex);
+            }
+            if (policy.trim().equals("")) {
+                return;
+            }
+
+            policyString.append(policy + ",");
             PolicyValue policyVal;
             int port;
 
@@ -422,6 +438,10 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         @Override
         public String toString() {
             return policyString.toString();
+        }
+
+        public String toStringWithComments() {
+            return policyStringAsEntered.toString();
         }
 
         private enum PolicyValue {
