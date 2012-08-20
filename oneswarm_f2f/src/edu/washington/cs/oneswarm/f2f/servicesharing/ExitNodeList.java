@@ -252,11 +252,11 @@ public class ExitNodeList {
                 toReregister.add(temp);
                 msg.removeErrorCode(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID);
             } else if (msg.errorCodes.contains(XMLHelper.ERROR_DUPLICATE_SERVICE_ID)) {
-                ExitNodeInfo temp = localSharedExitServices.remove(msg.serviceId);
 
-                // These two lines assume that there is one ExitService on
+                // These lines assume that there is one ExitService on
                 // this computer.
                 resetLocalServiceKey();
+                ExitNodeInfo temp = localSharedExitServices.remove(msg.serviceId);
                 temp.setId(getLocalServiceKey());
 
                 setExitNodeSharedService(temp);
