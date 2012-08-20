@@ -206,7 +206,9 @@ public class ExitNodeList {
         XMLHelper xmlOut = new XMLHelper(conn.getOutputStream());
         // Write check-in request to the connection
         for (ExitNodeInfo node : localSharedExitServices.values()) {
-            node.shortXML(xmlOut);
+            if (node.getEnabled()) {
+                node.shortXML(xmlOut);
+            }
         }
         xmlOut.close();
 
