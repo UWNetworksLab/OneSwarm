@@ -31,6 +31,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     private PolicyTree exitPolicy;
     private Date onlineSince;
     private String version;
+    private boolean enabled;
 
     public static final int KEY_SIZE_BITS = 1024;
     private PublicKey publicKey;
@@ -62,6 +63,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         this.version = version;
 
         generateNewKeys();
+        setEnabled(true);
     }
 
     /**
@@ -91,7 +93,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
     }
 
     public boolean allowsConnectionTo(String url, int port) {
-        return exitPolicy.getPolicy(url, port);
+        return this.enabled ? exitPolicy.getPolicy(url, port) : false;
     }
 
     /**
@@ -142,6 +144,14 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public boolean getEnabled() {
+        return this.enabled;
     }
 
     public long getId() {
