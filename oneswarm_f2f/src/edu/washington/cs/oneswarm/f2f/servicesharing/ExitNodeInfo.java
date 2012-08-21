@@ -49,8 +49,37 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
             Arrays.asList("allow localhost:80"));
     // TODO(willscott): Expand this list.
     public static final LinkedList<String> SAFE = new LinkedList<String>(Arrays.asList(
-            "allow google.com:*", "allow *.google.com:*", "allow gmail.com:*",
-            "allow googleusercontent.com:*", "allow wikipedia.org:*", "allow *.wikipedia.org:*"));
+            "allow facebook.com:*",
+            "allow *.facebook.com:*",
+            "allow google.com:*",
+            "allow *.google.com:*",
+            "allow youtube.com:*",
+            "allow yahoo.com:*",
+            "allow baidu.com:*",
+            "allow wikipedia.org:*",
+            "allow *.wikipedia.org:*",
+            "allow live.com:*",
+            "allow qq.com:*",
+            "allow twitter.com:*",
+            "allow amazon.com:*",
+            "allow *.blogspot.com:*",
+            "allow taobao.com:*",
+            "allow linkedin.com:*",
+            "allow yahoo.co.jp:*",
+            "allow sina.com.cn:*",
+            "allow msn.com:*",
+            "allow yandex.ru:*",
+            "allow babylon.com:*",
+            "allow bing.com:*",
+            "allow *.wordpress.com:*",
+            "allow ebay.com:*", // top 25 alexa.
+            "allow t.co:*",
+            "allow bbc.co.uk:*",
+            "allow mail.ru:*",
+            "allow blogger.com:*",
+            "allow gmail.com:*",
+            "allow googleusercontent.com:*"
+            ));
 
     public static final char COMMENT_CHAR = '#';
 
