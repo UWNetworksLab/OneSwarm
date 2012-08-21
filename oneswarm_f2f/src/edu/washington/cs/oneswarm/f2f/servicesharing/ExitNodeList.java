@@ -19,6 +19,7 @@ import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import org.gudy.azureus2.core3.config.COConfigurationManager;
+import org.gudy.azureus2.core3.util.SystemProperties;
 import org.xml.sax.SAXException;
 
 import edu.washington.cs.oneswarm.f2f.xml.DirectoryServerMsgHandler;
@@ -33,13 +34,19 @@ public class ExitNodeList {
     private static final String DIRECTORY_SERVER_URL_CONFIG_KEY = "DIRECTORY_SERVER_URL_CONFIG_KEY";
     private static final long KEEPALIVE_INTERVAL = 55 * 60 * 1000;
     private static final long DIRECTORY_SERVER_REFRESH_INTERVAL = 55 * 60 * 1000;
-    private static final String DATABASE_FILE = "./db.obj";
+    public static File OSF2F_DIR;
+    private static final String OSF2F_DIR_NAME = "osf2f";
+    private static final String EXIT_NODE_FILE = "osf2f.exits";
+    static {
+        OSF2F_DIR = new File(SystemProperties.getUserPath() + File.separator + OSF2F_DIR_NAME
+                + File.separator);
+    }
 
     private final List<ExitNodeInfo> exitNodeList;
     private final Map<Long, ExitNodeInfo> localSharedExitServices;
 
     private ExitNodeList() {
-        File dbFile = new File(DATABASE_FILE);
+        File dbFile = new File(OSF2F_DIR, EXIT_NODE_FILE);
         if (dbFile.exists()) {
             try {
                 ObjectInputStream obj = new ObjectInputStream(new FileInputStream(dbFile));
@@ -102,7 +109,7 @@ public class ExitNodeList {
     private void sortAndSave() {
         Collections.sort(exitNodeList);
 
-        File dbFile = new File(DATABASE_FILE);
+        File dbFile = new File(OSF2F_DIR, EXIT_NODE_FILE);
         try {
             ObjectOutputStream obj = new ObjectOutputStream(new FileOutputStream(dbFile));
             obj.writeObject(exitNodeList);
