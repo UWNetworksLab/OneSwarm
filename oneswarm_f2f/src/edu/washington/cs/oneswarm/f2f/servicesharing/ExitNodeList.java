@@ -1,6 +1,11 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
@@ -28,11 +33,26 @@ public class ExitNodeList {
     private static final String DIRECTORY_SERVER_URL_CONFIG_KEY = "DIRECTORY_SERVER_URL_CONFIG_KEY";
     private static final long KEEPALIVE_INTERVAL = 55 * 60 * 1000;
     private static final long DIRECTORY_SERVER_REFRESH_INTERVAL = 55 * 60 * 1000;
+    private static final String DATABASE_FILE = "./db.obj";
 
     private final List<ExitNodeInfo> exitNodeList;
     private final Map<Long, ExitNodeInfo> localSharedExitServices;
 
     private ExitNodeList() {
+        File dbFile = new File(DATABASE_FILE);
+        if (dbFile.exists()) {
+            try {
+                ObjectInputStream obj = new ObjectInputStream(new FileInputStream(dbFile));
+                exitNodeList = (List<ExitNodeInfo>) obj.readObject();
+                localSharedExitServices = (Map<Long, ExitNodeInfo>) obj.readObject();
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        } else {
+            exitNodeList = new LinkedList<ExitNodeInfo>();
+            localSharedExitServices = new HashMap<Long, ExitNodeInfo>();
+        }
         Timer keepAliveRegistrations = new Timer();
         keepAliveRegistrations.schedule(new TimerTask() {
             @Override
@@ -63,19 +83,14 @@ public class ExitNodeList {
                 }
             }
         }, 5 * 1000, DIRECTORY_SERVER_REFRESH_INTERVAL);
-
-        this.exitNodeList = new LinkedList<ExitNodeInfo>();
-        this.localSharedExitServices = new HashMap<Long, ExitNodeInfo>();
     }
 
     public static ExitNodeList getInstance() {
         return instance;
     }
 
-    public void addNodes(ExitNodeInfo[] exitNodes) {
-        for (ExitNodeInfo server : exitNodes) {
-            this.exitNodeList.add(server);
-        }
+    public void addNodes(List<ExitNodeInfo> exitNodes) {
+        exitNodeList.addAll(exitNodes);
         sortAndSave();
     }
 
@@ -86,7 +101,15 @@ public class ExitNodeList {
 
     private void sortAndSave() {
         Collections.sort(exitNodeList);
-        // TODO (nick) serialize and save list to disk
+
+        File dbFile = new File(DATABASE_FILE);
+        try {
+            ObjectOutputStream obj = new ObjectOutputStream(new FileOutputStream(dbFile));
+            obj.writeObject(exitNodeList);
+            obj.writeObject(localSharedExitServices);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public ExitNodeInfo getServerByKey(long serviceId) {
@@ -150,6 +173,7 @@ public class ExitNodeList {
 
     public void setExitNodeSharedService(ExitNodeInfo exitNode) {
         localSharedExitServices.put(exitNode.getId(), exitNode);
+        sortAndSave();
     }
 
     public ExitNodeInfo removeExitNodeSharedService(long serviceId) {
@@ -190,17 +214,7 @@ public class ExitNodeList {
         // TODO (nick) remove when partial update is ready
         exitNodeList.clear();
 
-        for (ExitNodeInfo node : exitNodes) {
-            // TODO (nick) implement partial update functionality and allow
-            // nodes to be removed if they have a flag
-            // if (exitNodeList.contains(node)) {
-            // exitNodeList.remove(node);
-            // }
-            // if(!node.flaggedForRemoval){
-            // exitNodeList.add(node);
-            // }
-            exitNodeList.add(node);
-        }
+        addNodes(exitNodes);
     }
 
     public void registerExitNodes() throws IOException, SAXException {
