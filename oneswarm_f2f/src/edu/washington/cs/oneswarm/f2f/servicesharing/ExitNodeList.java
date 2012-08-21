@@ -135,20 +135,28 @@ public class ExitNodeList {
     /**
      * Reset the locally shared service key, in case the node wishes to change
      * identity.
+     * 
+     * Returns the new key exactly as getLocalServiceKey would
      */
-    public void resetLocalServiceKey() {
-        localSharedExitServices.get(getLocalServiceKey()).generateNewKeys();
+    public long resetLocalServiceKey() {
+        ExitNodeInfo temp = removeExitNodeSharedService(getLocalServiceKey());
+        temp.generateNewKeys();
         COConfigurationManager.setParameter(LOCAL_SERVICE_KEY_CONFIG_KEY, 0L);
+        long newKey = getLocalServiceKey();
+        temp.setId(newKey);
+        setExitNodeSharedService(temp);
+        return newKey;
     }
 
     public void setExitNodeSharedService(ExitNodeInfo exitNode) {
         localSharedExitServices.put(exitNode.getId(), exitNode);
     }
 
-    public void removeExitNodeSharedService(long serviceId) {
+    public ExitNodeInfo removeExitNodeSharedService(long serviceId) {
         if (isExitNodeSharedService(serviceId)) {
-            localSharedExitServices.remove(serviceId);
+            return localSharedExitServices.remove(serviceId);
         }
+        return null;
     }
 
     public boolean isExitNodeSharedService(long serviceId) {
@@ -253,13 +261,11 @@ public class ExitNodeList {
                 msg.removeErrorCode(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID);
             } else if (msg.errorCodes.contains(XMLHelper.ERROR_DUPLICATE_SERVICE_ID)) {
 
-                // These lines assume that there is one ExitService on
-                // this computer.
-                resetLocalServiceKey();
-                ExitNodeInfo temp = localSharedExitServices.remove(msg.serviceId);
-                temp.setId(getLocalServiceKey());
+                ExitNodeInfo temp = getExitNodeSharedService(msg.serviceId);
 
-                setExitNodeSharedService(temp);
+                // This assumes a single shared service model.
+                resetLocalServiceKey();
+
                 toReregister.add(temp);
                 msg.removeErrorCode(XMLHelper.ERROR_DUPLICATE_SERVICE_ID);
             }
