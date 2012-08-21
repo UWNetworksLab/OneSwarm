@@ -1,5 +1,6 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -21,7 +22,9 @@ import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 
-public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
+public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
+    private static final long serialVersionUID = -1094323182607119597L;
+
     // Publicly available info
     private String nickname;
     private long serviceId;
@@ -352,7 +355,8 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
         xmlOut.endElement(XMLHelper.EXIT_NODE);
     }
 
-    private static class PolicyTree {
+    private static class PolicyTree implements Serializable {
+        private static final long serialVersionUID = 6781046686283739766L;
         private PolicyNode root;
         private final StringBuilder policyString;
         private final List<String> policyStringsAsEntered;
@@ -466,7 +470,8 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo> {
             ACCEPT, REJECT
         }
 
-        class PolicyNode {
+        class PolicyNode implements Serializable {
+            private static final long serialVersionUID = -8242520861243603331L;
             /*
              * Either domainPart or port will be filled for each node. "*" is
              * wild card for domainPart, "" is unused field -1 means wild card
