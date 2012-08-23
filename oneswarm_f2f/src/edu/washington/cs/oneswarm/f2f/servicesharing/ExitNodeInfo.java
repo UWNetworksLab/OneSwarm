@@ -52,37 +52,17 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
             Arrays.asList("allow localhost:80"));
     // TODO(willscott): Expand this list.
     public static final LinkedList<String> SAFE = new LinkedList<String>(Arrays.asList(
-            "allow facebook.com:*",
-            "allow *.facebook.com:*",
-            "allow google.com:*",
-            "allow *.google.com:*",
-            "allow youtube.com:*",
-            "allow yahoo.com:*",
-            "allow baidu.com:*",
-            "allow wikipedia.org:*",
-            "allow *.wikipedia.org:*",
-            "allow live.com:*",
-            "allow qq.com:*",
-            "allow twitter.com:*",
-            "allow amazon.com:*",
-            "allow *.blogspot.com:*",
-            "allow taobao.com:*",
-            "allow linkedin.com:*",
-            "allow yahoo.co.jp:*",
-            "allow sina.com.cn:*",
-            "allow msn.com:*",
-            "allow yandex.ru:*",
-            "allow babylon.com:*",
-            "allow bing.com:*",
+            "allow facebook.com:*", "allow *.facebook.com:*", "allow google.com:*",
+            "allow *.google.com:*", "allow youtube.com:*", "allow yahoo.com:*",
+            "allow baidu.com:*", "allow wikipedia.org:*", "allow *.wikipedia.org:*",
+            "allow live.com:*", "allow qq.com:*", "allow twitter.com:*", "allow amazon.com:*",
+            "allow *.blogspot.com:*", "allow taobao.com:*", "allow linkedin.com:*",
+            "allow yahoo.co.jp:*", "allow sina.com.cn:*", "allow msn.com:*", "allow yandex.ru:*",
+            "allow babylon.com:*", "allow bing.com:*",
             "allow *.wordpress.com:*",
             "allow ebay.com:*", // top 25 alexa.
-            "allow t.co:*",
-            "allow bbc.co.uk:*",
-            "allow mail.ru:*",
-            "allow blogger.com:*",
-            "allow gmail.com:*",
-            "allow googleusercontent.com:*"
-            ));
+            "allow t.co:*", "allow bbc.co.uk:*", "allow mail.ru:*", "allow blogger.com:*",
+            "allow gmail.com:*", "allow googleusercontent.com:*"));
 
     public static final char COMMENT_CHAR = '#';
 
@@ -299,8 +279,8 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
 
     public byte[] hashBase() {
         try {
-            return (getPublicKeyString() + nickname + advertizedBandwidth + exitPolicy.toString() + version)
-                    .getBytes(XMLHelper.ENCODING);
+            return (serviceId + getPublicKeyString() + nickname + advertizedBandwidth
+                    + exitPolicy.toString() + version).getBytes(XMLHelper.ENCODING);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

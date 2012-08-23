@@ -37,6 +37,7 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
 
     @Test
     public void testExitNodeInfo() throws Exception {
+
         // Run fake Directory Server
         try {
             int port = 7888;
@@ -49,14 +50,15 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
         }
 
         // Set the ExitNodeList to use our local DirectoryServer
-        ExitNodeList.getInstance().setDirectoryServer("http://127.0.0.1:7888/");
+        DirectoryServerManager.getInstance().setDirectoryServerUrls(
+                new String[] { "http://notARealServer/", "http://127.0.0.1:7888/" });
 
         try { // Make sure there are no errors in registering
             serviceId = ExitNodeList.getInstance().getLocalServiceKey();
             node = new ExitNodeInfo("Servo the Magnificent", serviceId, 250,
                     new String[] { "accept *.*" }, new Date(), "Version string 2.0");
             ExitNodeList.getInstance().setExitNodeSharedService(node);
-            ExitNodeList.getInstance().registerExitNodes();
+            DirectoryServerManager.getInstance().registerExitNodes();
         } catch (Exception e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -66,7 +68,7 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
         // its registration and making sure the service key matches the one we
         // made. Note: <code>this.serviceId</code> points now to the new
         // serviceId we asked the client to generate, not the original one.
-        ExitNodeList.getInstance().refreshFromDirectoryServer();
+        DirectoryServerManager.getInstance().refreshFromDirectoryServer();
         ExitNodeInfo node = ExitNodeList.getInstance().pickServer("google.com", 80);
         assertEquals(serviceId, node.getId());
     }
