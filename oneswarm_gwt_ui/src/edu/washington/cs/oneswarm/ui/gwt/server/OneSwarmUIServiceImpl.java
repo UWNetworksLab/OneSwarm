@@ -4209,6 +4209,7 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
 
         ClientService newService = new ClientService(id);
         newService.setName(name);
+        newService.manuallyAdded = true;
         ServiceSharingManager.getInstance().clientServices.put(id, newService);
     }
 
@@ -4254,14 +4255,14 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
     public String getNickname() {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        return instance.getExitNodeSharedService(key).getNickname();
+        return instance.getExitNodeSharedService(key).nickname;
     }
 
     @Override
     public void setNickname(String nickname) {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        instance.getExitNodeSharedService(key).setNickname(nickname);
+        instance.getExitNodeSharedService(key).nickname = nickname;
     }
 
     @Override

@@ -3,8 +3,10 @@ package edu.washington.cs.oneswarm.f2f.servicesharing;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -12,8 +14,8 @@ import java.util.logging.Logger;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.xml.sax.SAXException;
 
+import edu.washington.cs.oneswarm.f2f.xml.DirectoryInfoHandler;
 import edu.washington.cs.oneswarm.f2f.xml.DirectoryServerMsgHandler;
-import edu.washington.cs.oneswarm.f2f.xml.ExitNodeInfoHandler;
 import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 
 public class DirectoryServerManager {
@@ -82,12 +84,35 @@ public class DirectoryServerManager {
     protected void refreshFromDirectoryServer() throws IOException, SAXException {
         HttpURLConnection conn = createConnectionTo("list");
         List<ExitNodeInfo> exitNodes = new LinkedList<ExitNodeInfo>();
-        XMLHelper.parse(conn.getInputStream(), new ExitNodeInfoHandler(exitNodes));
+        XMLHelper.parse(conn.getInputStream(), new DirectoryInfoHandler(exitNodes));
         conn.disconnect();
 
-        // TODO (nick) remove when partial update is ready
+        // Clear all non-manually added client services
+        Iterator<ClientService> services = ServiceSharingManager.getInstance().clientServices
+                .values().iterator();
+        while (services.hasNext()) {
+            if (!services.next().manuallyAdded) {
+                services.remove();
+            }
+        }
+
+        // Add any client services to the Client service manager and remove from
+        // the list
+        Iterator<ExitNodeInfo> itr = exitNodes.iterator();
+        while (itr.hasNext()) {
+            ExitNodeInfo node = itr.next();
+            if (node.getVersion().equalsIgnoreCase(XMLHelper.SERVICE)) {
+                itr.remove();
+                ClientService newService = new ClientService(node.serviceId);
+                newService.setName(node.nickname);
+                ServiceSharingManager.getInstance().clientServices.put(node.serviceId, newService);
+            }
+        }
+
+        // TODO (nick) remove clear when partial update is implemented
         ExitNodeList.getInstance().exitNodeList.clear();
 
+        // Add remaining exitNodes to the ExitNodeList
         ExitNodeList.getInstance().addNodes(exitNodes);
     }
 
@@ -101,6 +126,12 @@ public class DirectoryServerManager {
                 node.shortXML(xmlOut);
             }
         }
+
+        for (SharedService service : ServiceSharingManager.getInstance().sharedServices.values()) {
+            if (service.published) {
+                service.shortXML(xmlOut);
+            }
+        }
         xmlOut.close();
 
         // Retry registrations that are fixable until no fixable errors remain.
@@ -111,7 +142,7 @@ public class DirectoryServerManager {
             conn.disconnect();
             conn = null;
 
-            List<ExitNodeInfo> toReRegister = decideWhatNeedsReregistering(msgs);
+            List<PublishableService> toReRegister = decideWhatNeedsReregistering(msgs);
 
             // If there are no fixable errors, stop trying
             if (toReRegister.size() == 0) {
@@ -123,15 +154,15 @@ public class DirectoryServerManager {
             conn.setRequestProperty("Content-Type", "text/xml");
             xmlOut = new XMLHelper(conn.getOutputStream());
             // Write register request to the connection
-            for (ExitNodeInfo node : toReRegister) {
+            for (PublishableService node : toReRegister) {
                 node.fullXML(xmlOut);
             }
             xmlOut.close();
         }
     }
 
-    private List<ExitNodeInfo> decideWhatNeedsReregistering(List<DirectoryServerMsg> msgs) {
-        List<ExitNodeInfo> toReregister = new LinkedList<ExitNodeInfo>();
+    private List<PublishableService> decideWhatNeedsReregistering(List<DirectoryServerMsg> msgs) {
+        List<PublishableService> toReregister = new LinkedList<PublishableService>();
         for (DirectoryServerMsg msg : msgs) {
             // If serviceId is duplicate, pull the node out and give
             // it a new serviceId.
@@ -139,17 +170,22 @@ public class DirectoryServerManager {
             if (msg.errorCodes.contains(XMLHelper.STATUS_SUCCESS)) {
                 msg.removeErrorCode(XMLHelper.STATUS_SUCCESS);
             } else if (msg.errorCodes.contains(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID)) {
-                ExitNodeInfo temp = ExitNodeList.getInstance().localSharedExitServices
-                        .get(msg.serviceId);
+                PublishableService temp = getPublishableServiceById(msg.serviceId);
                 toReregister.add(temp);
                 msg.removeErrorCode(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID);
             } else if (msg.errorCodes.contains(XMLHelper.ERROR_DUPLICATE_SERVICE_ID)) {
 
-                ExitNodeInfo temp = ExitNodeList.getInstance().getExitNodeSharedService(
-                        msg.serviceId);
+                PublishableService temp = getPublishableServiceById(msg.serviceId);
 
-                // This assumes a single shared service model.
-                ExitNodeList.getInstance().resetLocalServiceKey();
+                if (temp instanceof ExitNodeInfo) {
+                    // This assumes a single shared service model.
+                    ExitNodeList.getInstance().resetLocalServiceKey();
+                } else if (temp instanceof SharedService) {
+                    ServiceSharingManager.getInstance().deregisterServerService(msg.serviceId);
+                    temp.serviceId = new Random().nextLong();
+                    ServiceSharingManager.getInstance().registerSharedService(temp.serviceId,
+                            temp.nickname, ((SharedService) temp).getAddress());
+                }
 
                 toReregister.add(temp);
                 msg.removeErrorCode(XMLHelper.ERROR_DUPLICATE_SERVICE_ID);
@@ -161,6 +197,18 @@ public class DirectoryServerManager {
         }
         msgs.clear();
         return toReregister;
+    }
+
+    private PublishableService getPublishableServiceById(long serviceId) {
+        PublishableService service = ExitNodeList.getInstance().getExitNodeSharedService(serviceId);
+        if (service != null) {
+            return service;
+        }
+        service = ServiceSharingManager.getInstance().sharedServices.get(serviceId);
+        if (service == null) {
+            return service;
+        }
+        throw new IllegalArgumentException("Service Key is not a known PublishableService");
     }
 
     private HttpURLConnection createConnectionTo(String action) throws IOException {

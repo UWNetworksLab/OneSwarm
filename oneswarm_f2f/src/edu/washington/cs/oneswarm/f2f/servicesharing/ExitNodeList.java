@@ -77,7 +77,7 @@ public class ExitNodeList {
 
     public ExitNodeInfo getServerByKey(long serviceId) {
         for (ExitNodeInfo node : exitNodeList) {
-            if (node.getId() == serviceId) {
+            if (node.serviceId == serviceId) {
                 return node;
             }
         }
@@ -124,13 +124,13 @@ public class ExitNodeList {
         temp.generateNewKeys();
         COConfigurationManager.setParameter(LOCAL_SERVICE_KEY_CONFIG_KEY, 0L);
         long newKey = getLocalServiceKey();
-        temp.setId(newKey);
+        temp.serviceId = newKey;
         setExitNodeSharedService(temp);
         return newKey;
     }
 
     public void setExitNodeSharedService(ExitNodeInfo exitNode) {
-        localSharedExitServices.put(exitNode.getId(), exitNode);
+        localSharedExitServices.put(exitNode.serviceId, exitNode);
         sortAndSave();
     }
 

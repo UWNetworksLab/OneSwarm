@@ -70,7 +70,7 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
         // serviceId we asked the client to generate, not the original one.
         DirectoryServerManager.getInstance().refreshFromDirectoryServer();
         ExitNodeInfo node = ExitNodeList.getInstance().pickServer("google.com", 80);
-        assertEquals(serviceId, node.getId());
+        assertEquals(serviceId, node.serviceId);
     }
 
     public class OSDirectoryServer implements Runnable {

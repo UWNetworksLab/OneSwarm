@@ -7,6 +7,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import edu.washington.cs.oneswarm.f2f.servicesharing.DirectoryServerMsg;
+import edu.washington.cs.oneswarm.f2f.servicesharing.DirectoryServerMsg.SharedServiceType;
 
 public class DirectoryServerMsgHandler extends DefaultHandler {
     private DirectoryServerMsg tempMsg;
@@ -23,6 +24,10 @@ public class DirectoryServerMsgHandler extends DefaultHandler {
             throws SAXException {
         if (qName.equals(XMLHelper.EXIT_NODE)) {
             tempMsg = new DirectoryServerMsg();
+            tempMsg.type = SharedServiceType.EXIT_NODE;
+        } else if (qName.equalsIgnoreCase(XMLHelper.SERVICE)) {
+            tempMsg = new DirectoryServerMsg();
+            tempMsg.type = SharedServiceType.SERVICE;
         }
     }
 

@@ -2,12 +2,6 @@ package edu.washington.cs.oneswarm.f2f.servicesharing;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -16,28 +10,21 @@ import java.util.Queue;
 
 import org.xml.sax.SAXException;
 
-import sun.security.x509.CertAndKeyGen;
-
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-
 import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 
-public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
+public class ExitNodeInfo extends PublishableService implements Comparable<ExitNodeInfo>,
+        Serializable {
     private static final long serialVersionUID = -1094323182607119597L;
 
     // Publicly available info
-    private String nickname;
-    private long serviceId;
+
     private byte[] ipAddr;
     private int advertizedBandwidth;
     private PolicyTree exitPolicy;
     private Date onlineSince;
     private String version;
     private boolean enabled;
-
-    public static final int KEY_SIZE_BITS = 1024;
-    private PublicKey publicKey;
-    private PrivateKey privateKey;
+    public String type;
 
     // Private data stored about this exit node
     private static final int HISTORY_LENGTH = 10; // Must be >= 3
@@ -130,86 +117,12 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
         return exitPolicy.policyStringsAsEntered;
     }
 
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        } else if (other instanceof ExitNodeInfo) {
-            return this.serviceId == ((ExitNodeInfo) other).serviceId;
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return (int) serviceId;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
     public boolean getEnabled() {
         return this.enabled;
-    }
-
-    public long getId() {
-        return serviceId;
-    }
-
-    public void setId(long serviceId) {
-        this.serviceId = serviceId;
-    }
-
-    /**
-     * Returns public key as String.
-     * 
-     * @return PublicKey in the following format ALGOYTHM:FORMAT:KEY (KEY in
-     *         base 64)
-     */
-    public String getPublicKeyString() {
-        return this.publicKey.getAlgorithm() + ":" + this.publicKey.getFormat() + ":"
-                + Base64.encode(this.publicKey.getEncoded());
-    }
-
-    /**
-     * See <code>getPublicKeyString()</code> for format.
-     * 
-     * @param key
-     */
-    public void setPublicKeyString(String key) {
-        if (key == null || key.length() < 1) {
-            return;
-        }
-
-        final String[] parts = key.split(":");
-        publicKey = new PublicKey() {
-            private static final long serialVersionUID = -7259961818850093509L;
-
-            @Override
-            public String getAlgorithm() {
-                return parts[0];
-            }
-
-            @Override
-            public String getFormat() {
-                return parts[1];
-            }
-
-            @Override
-            public byte[] getEncoded() {
-                return Base64.decode(parts[2]);
-            }
-        };
-        privateKey = null;
     }
 
     public int getAdvertizedBandwith() {
@@ -277,6 +190,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
         }
     }
 
+    @Override
     public byte[] hashBase() {
         try {
             return (serviceId + getPublicKeyString() + nickname + advertizedBandwidth
@@ -287,34 +201,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
         return null;
     }
 
-    private String signature() {
-        try {
-            Signature sig = Signature.getInstance("SHA1withRSA");
-            sig.initSign(this.privateKey);
-            sig.update(hashBase());
-            return Base64.encode(sig.sign());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public void generateNewKeys() {
-        try {
-            CertAndKeyGen keyPair = new CertAndKeyGen("RSA", "SHA1withRSA", null);
-            keyPair.generate(KEY_SIZE_BITS);
-
-            publicKey = keyPair.getPublicKey();
-            privateKey = keyPair.getPrivateKey();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        }
-    }
-
+    @Override
     public void fullXML(XMLHelper xmlOut) throws SAXException {
         xmlOut.startElement(XMLHelper.EXIT_NODE);
         xmlOut.writeTag(XMLHelper.SERVICE_ID, Long.toString(serviceId));
@@ -327,6 +214,7 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
         xmlOut.endElement(XMLHelper.EXIT_NODE);
     }
 
+    @Override
     public void shortXML(XMLHelper xmlOut) throws SAXException {
         xmlOut.startElement(XMLHelper.EXIT_NODE);
         xmlOut.writeTag(XMLHelper.SERVICE_ID, Long.toString(serviceId));
@@ -491,5 +379,10 @@ public class ExitNodeInfo implements Comparable<ExitNodeInfo>, Serializable {
                 return node;
             }
         }
+    }
+
+    @Override
+    public String type() {
+        return XMLHelper.EXIT_NODE;
     }
 }

@@ -8,20 +8,24 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import edu.washington.cs.oneswarm.f2f.servicesharing.ExitNodeInfo;
 
-public class ExitNodeInfoHandler extends DefaultHandler {
+public class DirectoryInfoHandler extends DefaultHandler {
     private ExitNodeInfo tempNode;
     private String tempVal;
     private final List<ExitNodeInfo> nodes;
 
-    public ExitNodeInfoHandler(List<ExitNodeInfo> list) {
+    public DirectoryInfoHandler(List<ExitNodeInfo> list) {
         this.nodes = list;
     }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
             throws SAXException {
-        if (qName.equals(XMLHelper.EXIT_NODE)) {
+        if (qName.equalsIgnoreCase(XMLHelper.EXIT_NODE)) {
             tempNode = new ExitNodeInfo();
+            tempNode.type = XMLHelper.EXIT_NODE;
+        } else if (qName.equalsIgnoreCase(XMLHelper.SERVICE)) {
+            tempNode = new ExitNodeInfo();
+            tempNode.type = XMLHelper.SERVICE;
         }
     }
 
@@ -32,14 +36,14 @@ public class ExitNodeInfoHandler extends DefaultHandler {
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equalsIgnoreCase(XMLHelper.EXIT_NODE)) {
+        if (qName.equalsIgnoreCase(tempNode.type)) {
             nodes.add(tempNode);
         } else if (qName.equalsIgnoreCase(XMLHelper.SERVICE_ID)) {
-            tempNode.setId(Long.parseLong(tempVal));
+            tempNode.serviceId = Long.parseLong(tempVal);
         } else if (qName.equalsIgnoreCase(XMLHelper.PUBLIC_KEY)) {
             tempNode.setPublicKeyString(tempVal);
         } else if (qName.equalsIgnoreCase(XMLHelper.NICKNAME)) {
-            tempNode.setNickname(tempVal);
+            tempNode.nickname = tempVal;
         } else if (qName.equalsIgnoreCase(XMLHelper.BANDWIDTH)) {
             tempNode.setAdvertizedBandwidth(Integer.parseInt(tempVal));
         } else if (qName.equalsIgnoreCase(XMLHelper.EXIT_POLICY)) {

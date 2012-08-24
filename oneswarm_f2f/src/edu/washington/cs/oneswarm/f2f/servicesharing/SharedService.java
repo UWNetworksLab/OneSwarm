@@ -1,11 +1,13 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import org.gudy.azureus2.core3.config.COConfigurationManager;
+import org.xml.sax.SAXException;
 
 import com.aelitis.azureus.core.networkmanager.ConnectionEndpoint;
 import com.aelitis.azureus.core.networkmanager.NetworkConnection;
@@ -15,9 +17,10 @@ import com.aelitis.azureus.core.networkmanager.impl.tcp.ProtocolEndpointTCP;
 
 import edu.washington.cs.oneswarm.f2f.servicesharing.DataMessage.RawMessageDecoder;
 import edu.washington.cs.oneswarm.f2f.servicesharing.DataMessage.RawMessageEncoder;
+import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.SharedServiceDTO;
 
-public class SharedService implements Comparable<SharedService> {
+public class SharedService extends PublishableService implements Comparable<SharedService> {
     // Time the service is disabled after a failed connect attempt;
     public static final long FAILURE_BACKOFF = 60 * 1000;
     public static final String CONFIGURATION_PREFIX = "SHARED_SERVICE_";
@@ -73,8 +76,7 @@ public class SharedService implements Comparable<SharedService> {
         return this.getName().compareTo(that.getName());
     }
 
-    protected ConnectionListener getMonitoringListener(final NetworkConnection conn)
-    {
+    protected ConnectionListener getMonitoringListener(final NetworkConnection conn) {
         final SharedService self = this;
         return new ConnectionListener() {
             @Override
@@ -93,13 +95,13 @@ public class SharedService implements Comparable<SharedService> {
             }
 
             @Override
-                public void exceptionThrown(Throwable error) {
+            public void exceptionThrown(Throwable error) {
                 self.activeConnections--;
             }
 
             @Override
             public String getDescription() {
-                    return "Shared Service Listener";
+                return "Shared Service Listener";
             }
         };
     }
@@ -144,5 +146,35 @@ public class SharedService implements Comparable<SharedService> {
         COConfigurationManager.removeParameter(getPortKey());
         COConfigurationManager.removeParameter(getIpKey());
         COConfigurationManager.removeParameter(getNameKey());
+    }
+
+    @Override
+    public String type() {
+        return XMLHelper.SERVICE;
+    }
+
+    @Override
+    public byte[] hashBase() {
+        try {
+            return (serviceId + getPublicKeyString() + nickname).getBytes(XMLHelper.ENCODING);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public void fullXML(XMLHelper xmlOut) throws SAXException {
+        xmlOut.startElement(XMLHelper.SERVICE);
+        xmlOut.writeTag(XMLHelper.SERVICE_ID, Long.toString(serviceId));
+        xmlOut.writeTag(XMLHelper.PUBLIC_KEY, getPublicKeyString());
+        xmlOut.writeTag(XMLHelper.NICKNAME, nickname);
+        xmlOut.writeTag(XMLHelper.SIGNATURE, signature());
+        xmlOut.endElement(XMLHelper.SERVICE);
+    }
+
+    @Override
+    public void shortXML(XMLHelper xmlOut) throws SAXException {
+        fullXML(xmlOut);
     }
 }
