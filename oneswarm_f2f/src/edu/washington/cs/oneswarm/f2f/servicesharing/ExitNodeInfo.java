@@ -17,7 +17,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
     private static final long serialVersionUID = -1094323182607119597L;
 
     // Publicly available info
-
+    private String nickname;
     private byte[] ipAddr;
     private int advertizedBandwidth;
     private PolicyTree exitPolicy;
@@ -28,10 +28,8 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
 
     // Private data stored about this exit node
     private static final int HISTORY_LENGTH = 10; // Must be >= 3
-    private Queue<Integer> bandwidthHistory;
+    private final Queue<Integer> bandwidthHistory;
     private int avgBandwidth; // Stored avg of history (KB/s)
-    private Queue<Integer> latencyHistory;
-    private int avgLatency; // Stored avg of history (ms)
 
     public static final LinkedList<String> EVERYTHING = new LinkedList<String>(
             Arrays.asList("allow *:*"));
@@ -62,7 +60,8 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
         this.onlineSince = onlineSince;
         this.version = version;
 
-        generateNewKeys();
+        this.bandwidthHistory = new LinkedList<Integer>();
+
         setEnabled(true);
     }
 
@@ -154,17 +153,8 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
         avgBandwidth = averageIntQueue(bandwidthHistory);
     }
 
-    public void recordLatency(int ms) {
-        latencyHistory.add(ms);
-        avgLatency = averageIntQueue(latencyHistory);
-    }
-
     public int getAvgBandwidth() {
         return avgBandwidth;
-    }
-
-    public int getAvgLatency() {
-        return avgLatency;
     }
 
     private int averageIntQueue(Queue<Integer> q) {
@@ -193,7 +183,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
     @Override
     public byte[] hashBase() {
         try {
-            return (serviceId + getPublicKeyString() + nickname + advertizedBandwidth
+            return (serviceId + getPublicKeyString() + getNickname() + advertizedBandwidth
                     + exitPolicy.toString() + version).getBytes(XMLHelper.ENCODING);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -206,7 +196,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
         xmlOut.startElement(XMLHelper.EXIT_NODE);
         xmlOut.writeTag(XMLHelper.SERVICE_ID, Long.toString(serviceId));
         xmlOut.writeTag(XMLHelper.PUBLIC_KEY, getPublicKeyString());
-        xmlOut.writeTag(XMLHelper.NICKNAME, nickname);
+        xmlOut.writeTag(XMLHelper.NICKNAME, getNickname());
         xmlOut.writeTag(XMLHelper.BANDWIDTH, "" + advertizedBandwidth);
         xmlOut.writeTag(XMLHelper.EXIT_POLICY, exitPolicy.toString());
         xmlOut.writeTag(XMLHelper.VERSION, version);
@@ -384,5 +374,13 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
     @Override
     public String type() {
         return XMLHelper.EXIT_NODE;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 }

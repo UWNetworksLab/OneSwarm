@@ -135,6 +135,10 @@ public class ServiceSharingManager {
     }
 
     public void deregisterServerService(long searchKey) {
+        deregisterServerService(searchKey, true);
+    }
+
+    public void deregisterServerService(long searchKey, boolean cleanService) {
         try {
             lock.lock();
             @SuppressWarnings("unchecked")
@@ -143,7 +147,7 @@ public class ServiceSharingManager {
             services.remove(Long.valueOf(searchKey));
             COConfigurationManager.setParameter(SHARED_SERVICE_CONFIG_KEY, services);
             SharedService service = sharedServices.remove(searchKey);
-            if (service != null) {
+            if (service != null && cleanService) {
                 service.clean();
             }
         } finally {
@@ -414,7 +418,7 @@ public class ServiceSharingManager {
         }
 
         for (SharedService sharedService : toRemove) {
-            deregisterServerService(sharedService.searchKey);
+            deregisterServerService(sharedService.serviceId);
         }
     }
 }

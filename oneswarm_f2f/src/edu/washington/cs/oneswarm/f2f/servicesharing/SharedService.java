@@ -28,10 +28,8 @@ public class SharedService extends PublishableService implements Comparable<Shar
     private long lastFailedConnect;
     private int activeConnections = 0;
 
-    final long searchKey;
-
-    public SharedService(Long searchKey) {
-        this.searchKey = searchKey;
+    public SharedService(Long serviceId) {
+        this.serviceId = serviceId;
     }
 
     public String getName() {
@@ -39,7 +37,7 @@ public class SharedService extends PublishableService implements Comparable<Shar
     }
 
     private String getNameKey() {
-        return CONFIGURATION_PREFIX + searchKey + "_name";
+        return CONFIGURATION_PREFIX + serviceId + "_name";
     }
 
     InetSocketAddress getAddress() {
@@ -55,11 +53,11 @@ public class SharedService extends PublishableService implements Comparable<Shar
     }
 
     private String getPortKey() {
-        return CONFIGURATION_PREFIX + searchKey + "_port";
+        return CONFIGURATION_PREFIX + serviceId + "_port";
     }
 
     private String getIpKey() {
-        return CONFIGURATION_PREFIX + searchKey + "_ip";
+        return CONFIGURATION_PREFIX + serviceId + "_ip";
     }
 
     public void setName(String name) {
@@ -131,14 +129,14 @@ public class SharedService extends PublishableService implements Comparable<Shar
 
     public SharedServiceDTO toDTO() {
         InetSocketAddress address = getAddress();
-        return new SharedServiceDTO(getName(), Long.toHexString(searchKey), address.getAddress()
+        return new SharedServiceDTO(getName(), Long.toHexString(serviceId), address.getAddress()
                 .getHostAddress(), address.getPort());
     }
 
     @Override
     public String toString() {
         InetSocketAddress address = getAddress();
-        return "key=" + searchKey + " name=" + getName() + " address=" + address + " enabled="
+        return "key=" + serviceId + " name=" + getName() + " address=" + address + " enabled="
                 + isEnabled();
     }
 
@@ -156,7 +154,7 @@ public class SharedService extends PublishableService implements Comparable<Shar
     @Override
     public byte[] hashBase() {
         try {
-            return (serviceId + getPublicKeyString() + nickname).getBytes(XMLHelper.ENCODING);
+            return (serviceId + getPublicKeyString() + getName()).getBytes(XMLHelper.ENCODING);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -168,7 +166,7 @@ public class SharedService extends PublishableService implements Comparable<Shar
         xmlOut.startElement(XMLHelper.SERVICE);
         xmlOut.writeTag(XMLHelper.SERVICE_ID, Long.toString(serviceId));
         xmlOut.writeTag(XMLHelper.PUBLIC_KEY, getPublicKeyString());
-        xmlOut.writeTag(XMLHelper.NICKNAME, nickname);
+        xmlOut.writeTag(XMLHelper.NICKNAME, getName());
         xmlOut.writeTag(XMLHelper.SIGNATURE, signature());
         xmlOut.endElement(XMLHelper.SERVICE);
     }

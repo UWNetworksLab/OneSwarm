@@ -4255,14 +4255,14 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
     public String getNickname() {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        return instance.getExitNodeSharedService(key).nickname;
+        return instance.getExitNodeSharedService(key).getNickname();
     }
 
     @Override
     public void setNickname(String nickname) {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        instance.getExitNodeSharedService(key).nickname = nickname;
+        instance.getExitNodeSharedService(key).setNickname(nickname);
     }
 
     @Override

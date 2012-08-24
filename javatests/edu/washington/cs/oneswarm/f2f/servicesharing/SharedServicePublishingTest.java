@@ -5,7 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.Date;
+import java.net.InetSocketAddress;
+import java.util.Random;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -31,12 +32,13 @@ import edu.washington.cs.oneswarm.test.util.OneSwarmTestBase;
  * @author Nick
  * 
  */
-public class ExitNodePublishingTest extends OneSwarmTestBase {
+public class SharedServicePublishingTest extends OneSwarmTestBase {
     public long serviceId;
-    public ExitNodeInfo node;
+    public SharedService node;
 
     @Test
-    public void testExitNodeInfo() throws Exception {
+    public void testPublishSharedService() throws Exception {
+        ServiceSharingManager.getInstance().clearLocalServices();
 
         // Run fake Directory Server
         try {
@@ -54,10 +56,9 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
                 new String[] { "http://notARealServer/", "http://127.0.0.1:7888/" });
 
         try { // Make sure there are no errors in registering
-            serviceId = ExitNodeList.getInstance().getLocalServiceKey();
-            node = new ExitNodeInfo("Servo the Magnificent", serviceId, 250,
-                    new String[] { "accept *.*" }, new Date(), "Version string 2.0");
-            ExitNodeList.getInstance().setExitNodeSharedService(node);
+            serviceId = new Random().nextLong();
+            ServiceSharingManager.getInstance().registerSharedService(serviceId,
+                    "SharedService 0.98", new InetSocketAddress(80));
             DirectoryServerManager.getInstance().registerPublishableServices();
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,8 +70,14 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
         // made. Note: <code>this.serviceId</code> points now to the new
         // serviceId we asked the client to generate, not the original one.
         DirectoryServerManager.getInstance().refreshFromDirectoryServer();
-        ExitNodeInfo node = ExitNodeList.getInstance().pickServer("google.com", 80);
-        assertEquals(serviceId, node.serviceId);
+        try {
+            assertEquals(
+                    serviceId,
+                    ServiceSharingManager.getInstance().clientServices.get(serviceId).serverSearchKey);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.toString());
+        }
     }
 
     public class OSDirectoryServer implements Runnable {
@@ -117,33 +124,35 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
                     switch (count) {
                     // Tell the client that their registration has expired
                     case 0:
-                        xmlOut.startElement(XMLHelper.EXIT_NODE);
+                        xmlOut.startElement(XMLHelper.SERVICE);
                         xmlOut.writeTag(XMLHelper.SERVICE_ID, serviceId + "");
                         xmlOut.writeStatus(XMLHelper.ERROR_UNREGISTERED_SERVICE_ID,
                                 "Unregistered ServiceId.");
-                        xmlOut.endElement(XMLHelper.EXIT_NODE);
+                        xmlOut.endElement(XMLHelper.SERVICE);
                         break;
                     // Tell the client that their serviceId is duplicate and
                     // must be regenerated
                     case 1:
-                        xmlOut.startElement(XMLHelper.EXIT_NODE);
+                        xmlOut.startElement(XMLHelper.SERVICE);
                         xmlOut.writeTag(XMLHelper.SERVICE_ID, serviceId + "");
                         xmlOut.writeStatus(XMLHelper.ERROR_DUPLICATE_SERVICE_ID,
                                 "Duplicate ServiceId.");
-                        xmlOut.endElement(XMLHelper.EXIT_NODE);
+                        xmlOut.endElement(XMLHelper.SERVICE);
                         break;
                     // Check that they did in fact regen the serviceId and tell
                     // them they suceeded
                     case 2:
-                        long newServiceId = ExitNodeList.getInstance().getLocalServiceKey();
-                        assertFalse(newServiceId == ExitNodePublishingTest.this.serviceId);
-                        ExitNodePublishingTest.this.serviceId = newServiceId;
-                        xmlOut.startElement(XMLHelper.EXIT_NODE);
+                        long newServiceId = ServiceSharingManager.getInstance().sharedServices
+                                .values().iterator().next().serviceId;
+                        assertFalse(newServiceId == SharedServicePublishingTest.this.serviceId);
+                        SharedServicePublishingTest.this.serviceId = newServiceId;
+                        xmlOut.startElement(XMLHelper.SERVICE);
                         xmlOut.writeTag(XMLHelper.SERVICE_ID, newServiceId + "");
                         xmlOut.writeStatus(XMLHelper.STATUS_SUCCESS, "Success.");
-                        xmlOut.endElement(XMLHelper.EXIT_NODE);
+                        xmlOut.endElement(XMLHelper.SERVICE);
                         break;
                     case 3:
+                        node = ServiceSharingManager.getInstance().sharedServices.get(serviceId);
                         node.fullXML(xmlOut);
                         break;
                     default:

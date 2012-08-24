@@ -2,6 +2,7 @@ package edu.washington.cs.oneswarm.f2f.servicesharing;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -50,7 +51,7 @@ public class DirectoryServerManager {
             @Override
             public void run() {
                 try {
-                    DirectoryServerManager.this.registerExitNodes();
+                    DirectoryServerManager.this.registerPublishableServices();
                 } catch (IOException e) {
                     // Unexpected
                     e.printStackTrace();
@@ -83,29 +84,31 @@ public class DirectoryServerManager {
 
     protected void refreshFromDirectoryServer() throws IOException, SAXException {
         HttpURLConnection conn = createConnectionTo("list");
-        List<ExitNodeInfo> exitNodes = new LinkedList<ExitNodeInfo>();
-        XMLHelper.parse(conn.getInputStream(), new DirectoryInfoHandler(exitNodes));
+        List<PublishableService> services = new LinkedList<PublishableService>();
+        XMLHelper.parse(conn.getInputStream(), new DirectoryInfoHandler(services));
         conn.disconnect();
 
         // Clear all non-manually added client services
-        Iterator<ClientService> services = ServiceSharingManager.getInstance().clientServices
+        Iterator<ClientService> serviceItr = ServiceSharingManager.getInstance().clientServices
                 .values().iterator();
-        while (services.hasNext()) {
-            if (!services.next().manuallyAdded) {
-                services.remove();
+        while (serviceItr.hasNext()) {
+            if (!serviceItr.next().manuallyAdded) {
+                serviceItr.remove();
             }
         }
 
-        // Add any client services to the Client service manager and remove from
-        // the list
-        Iterator<ExitNodeInfo> itr = exitNodes.iterator();
+        List<ExitNodeInfo> exitNodes = new LinkedList<ExitNodeInfo>();
+        Iterator<PublishableService> itr = services.iterator();
         while (itr.hasNext()) {
-            ExitNodeInfo node = itr.next();
-            if (node.getVersion().equalsIgnoreCase(XMLHelper.SERVICE)) {
+            PublishableService service = itr.next();
+            if (service instanceof SharedService) {
                 itr.remove();
-                ClientService newService = new ClientService(node.serviceId);
-                newService.setName(node.nickname);
-                ServiceSharingManager.getInstance().clientServices.put(node.serviceId, newService);
+                ClientService newService = new ClientService(service.serviceId);
+                newService.setName(((SharedService) service).getName());
+                ServiceSharingManager.getInstance().clientServices.put(service.serviceId,
+                        newService);
+            } else {
+                exitNodes.add((ExitNodeInfo) service);
             }
         }
 
@@ -116,7 +119,7 @@ public class DirectoryServerManager {
         ExitNodeList.getInstance().addNodes(exitNodes);
     }
 
-    public void registerExitNodes() throws IOException, SAXException {
+    public void registerPublishableServices() throws IOException, SAXException {
         HttpURLConnection conn = createConnectionTo(CHECKIN);
         conn.setRequestProperty("Content-Type", "text/xml");
         XMLHelper xmlOut = new XMLHelper(conn.getOutputStream());
@@ -181,10 +184,14 @@ public class DirectoryServerManager {
                     // This assumes a single shared service model.
                     ExitNodeList.getInstance().resetLocalServiceKey();
                 } else if (temp instanceof SharedService) {
-                    ServiceSharingManager.getInstance().deregisterServerService(msg.serviceId);
-                    temp.serviceId = new Random().nextLong();
-                    ServiceSharingManager.getInstance().registerSharedService(temp.serviceId,
-                            temp.nickname, ((SharedService) temp).getAddress());
+                    InetSocketAddress address = ((SharedService) temp).getAddress();
+                    String name = ((SharedService) temp).getName();
+                    ServiceSharingManager.getInstance().deregisterServerService(msg.serviceId,
+                            false);
+                    long serviceId = new Random().nextLong();
+                    ServiceSharingManager.getInstance().registerSharedService(serviceId, name,
+                            address);
+                    temp = ServiceSharingManager.getInstance().sharedServices.get(serviceId);
                 }
 
                 toReregister.add(temp);
@@ -205,10 +212,11 @@ public class DirectoryServerManager {
             return service;
         }
         service = ServiceSharingManager.getInstance().sharedServices.get(serviceId);
-        if (service == null) {
+        if (service != null) {
             return service;
         }
-        throw new IllegalArgumentException("Service Key is not a known PublishableService");
+        throw new IllegalArgumentException("Service ID " + serviceId
+                + " is not a known PublishableService");
     }
 
     private HttpURLConnection createConnectionTo(String action) throws IOException {

@@ -16,13 +16,16 @@ import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 
 public abstract class PublishableService {
-    public String nickname;
-    public long serviceId;
-    public boolean published;
+    public long serviceId = 0;
+    public boolean published = true;
 
     public static final int KEY_SIZE_BITS = 1024;
     private PublicKey publicKey;
     private PrivateKey privateKey;
+
+    public PublishableService() {
+        generateNewKeys();
+    }
 
     public abstract String type();
 
