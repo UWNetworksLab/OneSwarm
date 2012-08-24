@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DirectoryServerMsg {
+    public SharedServiceType type;
     public long serviceId; // The service that this message is associated with.
     public List<Integer> errorCodes;
     public List<String> errorStrings;
@@ -17,5 +18,9 @@ public class DirectoryServerMsg {
         int index = errorCodes.indexOf(errorCode);
         errorCodes.remove(index);
         errorStrings.remove(index);
+    }
+
+    public enum SharedServiceType {
+        EXIT_NODE, SERVICE
     }
 }

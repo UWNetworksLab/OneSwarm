@@ -10,7 +10,7 @@ public class ExitNodeSharedService extends SharedService {
 
     @Override
     public NetworkConnection createConnection() {
-        PolicyNetworkConnection pnc = new PolicyNetworkConnection(this.searchKey);
+        PolicyNetworkConnection pnc = new PolicyNetworkConnection(this.serviceId);
         return new ListenedNetworkConnection(pnc, this.getMonitoringListener(pnc));
     }
 }

@@ -115,9 +115,9 @@ public class SocksCommandHandler {
                 NetworkConnection nc = new NetworkConnectionImpl(transport, encoder, decoder);
 
                 ClientService service = ServiceSharingManager.getInstance().getClientService(
-                        server.getId());
+                        server.serviceId);
                 if (service == null) {
-                    service = new ClientService(server.getId());
+                    service = new ClientService(server.serviceId);
                 }
                 final long connectionOpen = System.currentTimeMillis();
                 service.connectionRouted(nc, null, new ServiceConnectionDelegate() {
