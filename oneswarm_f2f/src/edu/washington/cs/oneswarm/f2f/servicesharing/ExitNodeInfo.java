@@ -165,6 +165,9 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
         for (int i = 0; i < q.size(); i++) {
             sum += q.remove();
         }
+        if (q.size() == 0) {
+            return 0;
+        }
         return sum / q.size();
     }
 
