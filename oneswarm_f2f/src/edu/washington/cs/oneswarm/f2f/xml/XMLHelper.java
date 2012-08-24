@@ -20,13 +20,15 @@ public class XMLHelper {
 
     // General XML attributes and tag names
     public static final String ENCODING = "UTF-8";
-    public static final String EXIT_NODE_LIST = "ExitNodeList";
+    public static final String ROOT = "Root";
     public static final String STATUS = "Status";
     public static final String STATUS_CODE = "StatusCode";
     public static final String STATUS_MESSAGE = "StatusMessage";
 
     // ExitNode tags (must be used inside an EXIT_NODE block
-    public static final String EXIT_NODE = "ExitNode";
+    public static final String EXIT_NODE = "ExitNode"; // For ExitNodes using OS
+                                                       // Wire format
+    public static final String SERVICE = "Service"; // For OS Websites
     public static final String SERVICE_ID = "ServiceId";
     public static final String PUBLIC_KEY = "PublicKey";
     public static final String NICKNAME = "Nickname";
@@ -56,7 +58,7 @@ public class XMLHelper {
         XMLSerializer serializer = new XMLSerializer(out, format);
         handler = serializer.asContentHandler();
         handler.startDocument();
-        startElement(EXIT_NODE_LIST);
+        startElement(ROOT);
     }
 
     public XMLHelper(Writer out) throws IOException {
@@ -89,7 +91,7 @@ public class XMLHelper {
     }
 
     public void close() throws SAXException {
-        endElement(EXIT_NODE_LIST);
+        endElement(ROOT);
         handler.endDocument();
     }
 

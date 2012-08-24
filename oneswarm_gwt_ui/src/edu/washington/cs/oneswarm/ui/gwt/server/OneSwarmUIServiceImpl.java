@@ -4209,6 +4209,7 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
 
         ClientService newService = new ClientService(id);
         newService.setName(name);
+        newService.manuallyAdded = true;
         ServiceSharingManager.getInstance().clientServices.put(id, newService);
     }
 

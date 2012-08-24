@@ -26,6 +26,8 @@ public class ClientService implements RoutingListener, Comparable<ClientService>
     final long serverSearchKey;
     final int serviceChannels;
     private IncomingSocketChannelManager iscm;
+    public boolean manuallyAdded = false;
+    public boolean published;
 
     public ClientService(long key) {
         this.serverSearchKey = key;
