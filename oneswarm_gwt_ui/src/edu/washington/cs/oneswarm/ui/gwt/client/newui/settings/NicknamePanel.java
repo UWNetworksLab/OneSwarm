@@ -23,7 +23,7 @@ class NicknamePanel  extends SettingsPanel {
         Label l = new Label(msg.settings_exitpolicy_nickname_label());
         h.add(l);
         h.add(nickname_box);
-        nickname_box.setWidth("55px");
+        nickname_box.setWidth("100px");
         
         h.add(published_box);
         super.add(h);
