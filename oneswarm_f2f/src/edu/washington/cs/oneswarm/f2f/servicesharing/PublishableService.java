@@ -1,17 +1,15 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
-import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Signature;
 
+import org.apache.commons.codec.binary.Base64;
 import org.xml.sax.SAXException;
-
-import sun.security.x509.CertAndKeyGen;
-
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 
@@ -58,7 +56,7 @@ public abstract class PublishableService {
      */
     public String getPublicKeyString() {
         return this.publicKey.getAlgorithm() + ":" + this.publicKey.getFormat() + ":"
-                + Base64.encode(this.publicKey.getEncoded());
+                + Base64.encodeBase64(this.publicKey.getEncoded());
     }
 
     /**
@@ -87,7 +85,7 @@ public abstract class PublishableService {
 
             @Override
             public byte[] getEncoded() {
-                return Base64.decode(parts[2]);
+                return Base64.decodeBase64(parts[2].getBytes());
             }
         };
         privateKey = null;
@@ -98,7 +96,7 @@ public abstract class PublishableService {
             Signature sig = Signature.getInstance("SHA1withRSA");
             sig.initSign(this.privateKey);
             sig.update(hashBase());
-            return Base64.encode(sig.sign());
+            return Base64.encodeBase64(sig.sign()).toString();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -107,16 +105,13 @@ public abstract class PublishableService {
 
     public void generateNewKeys() {
         try {
-            CertAndKeyGen keyPair = new CertAndKeyGen("RSA", "SHA1withRSA", null);
-            keyPair.generate(KEY_SIZE_BITS);
+            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+            kpg.initialize(KEY_SIZE_BITS, new SecureRandom());
+            KeyPair keyPair = kpg.generateKeyPair();
 
-            publicKey = keyPair.getPublicKey();
-            privateKey = keyPair.getPrivateKey();
+            publicKey = keyPair.getPublic();
+            privateKey = keyPair.getPrivate();
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
     }
