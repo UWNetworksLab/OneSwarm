@@ -298,9 +298,9 @@ public interface OneSwarmUIService extends RemoteService {
 
     List<String> getExitPolicyStrings();
 
-    String getNickname();
+    String[] getNickname();
 
-    void setNickname(String nickname);
+    void setNickname(String nickname, Boolean published);
 
     List<String> getPresetPolicy(String sender);
 }

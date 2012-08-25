@@ -82,6 +82,7 @@ import com.aelitis.azureus.plugins.dht.DHTPlugin;
 import com.aelitis.azureus.plugins.dht.DHTPluginContact;
 import com.aelitis.azureus.plugins.dht.DHTPluginOperationListener;
 import com.aelitis.azureus.plugins.dht.DHTPluginValue;
+import com.google.gwt.dev.util.Pair;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
@@ -4252,17 +4253,24 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
     }
 
     @Override
-    public String getNickname() {
+    public String[] getNickname() {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        return instance.getExitNodeSharedService(key).getNickname();
+        ExitNodeInfo info = instance.getExitNodeSharedService(key);
+        if (info != null) {
+            return new String[] {info.getNickname(), info.published ? "true" : "false"};
+        } else {
+            return new String[] {"", "true"};
+        }
     }
 
     @Override
-    public void setNickname(String nickname) {
+    public void setNickname(String nickname, Boolean published) {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        instance.getExitNodeSharedService(key).setNickname(nickname);
+        ExitNodeInfo info = instance.getExitNodeSharedService(key);
+        info.setNickname(nickname);
+        info.published = published;
     }
 
     @Override

@@ -334,9 +334,9 @@ public interface OneSwarmUIServiceAsync {
 
     void getExitPolicyStrings(AsyncCallback<List<String>> callback);
 
-    void getNickname(AsyncCallback<String> callback);
+    void getNickname(AsyncCallback<String[]> callback);
 
-    void setNickname(String nickname, AsyncCallback<Void> callback);
+    void setNickname(String nickname, Boolean published, AsyncCallback<Void> callback);
 
     void getPresetPolicy(String sender, AsyncCallback<List<String>> asyncCallback);
 }
