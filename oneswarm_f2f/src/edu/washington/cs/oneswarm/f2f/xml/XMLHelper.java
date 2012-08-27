@@ -25,6 +25,8 @@ public class XMLHelper {
     public static final String STATUS_CODE = "StatusCode";
     public static final String STATUS_MESSAGE = "StatusMessage";
 
+    public static final String DIGEST = "Digest";
+    public static final String DIGEST_PLACEHOLDER = "OneSwarmDigest";
     // ExitNode tags (must be used inside an EXIT_NODE block
     public static final String EXIT_NODE = "ExitNode"; // For ExitNodes using OS
                                                        // Wire format
@@ -49,13 +51,14 @@ public class XMLHelper {
 
     public static final int ERROR_GENERAL_SERVER = 500;
 
+    XMLSerializer serializer;
     ContentHandler handler;
 
     public XMLHelper(OutputStream out) throws IOException, SAXException {
         OutputFormat format = new OutputFormat("XML", ENCODING, true);
         format.setIndent(1);
         format.setIndenting(true);
-        XMLSerializer serializer = new XMLSerializer(out, format);
+        serializer = new XMLSerializer(out, format);
         handler = serializer.asContentHandler();
         handler.startDocument();
         startElement(ROOT);
@@ -65,7 +68,7 @@ public class XMLHelper {
         OutputFormat format = new OutputFormat("XML", ENCODING, true);
         format.setIndent(1);
         format.setIndenting(true);
-        XMLSerializer serializer = new XMLSerializer(out, format);
+        serializer = new XMLSerializer(out, format);
         handler = serializer.asContentHandler();
     }
 
@@ -80,6 +83,15 @@ public class XMLHelper {
         startElement(tag);
         handler.characters(content.toCharArray(), 0, content.length());
         endElement(tag);
+    }
+    
+    public void writeDigest() throws SAXException {
+    	startElement(DIGEST);
+    	serializer.startCDATA();
+    	char[] ph = DIGEST_PLACEHOLDER.toCharArray();
+    	serializer.characters(ph, 0, ph.length);
+    	serializer.endCDATA();
+    	endElement(DIGEST);
     }
 
     public void startElement(String qName) throws SAXException {
