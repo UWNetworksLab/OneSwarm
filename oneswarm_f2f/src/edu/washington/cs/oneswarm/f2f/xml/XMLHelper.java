@@ -1,19 +1,26 @@
 package edu.washington.cs.oneswarm.f2f.xml;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.nio.ByteBuffer;
+import java.security.Signature;
+import java.util.Arrays;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import com.google.common.annotations.VisibleForTesting;
 
 @SuppressWarnings("deprecation")
 public class XMLHelper {
@@ -107,12 +114,43 @@ public class XMLHelper {
         handler.endDocument();
     }
 
-    public static void parse(InputStream in, DefaultHandler handler) throws SAXException,
+    @VisibleForTesting
+    public static boolean validateDigest = true;
+    
+    public static void parse(InputStream in, DefaultHandler handler, Signature signature) throws SAXException,
             IOException {
+        byte[] inputData = IOUtils.toByteArray(in);
+        if (validateDigest) {
+            byte[] cDataBytes = "<![CDATA[".getBytes();
+            // Validate Digest.
+            int digestEnd = Utils.lastIndexOf(inputData, DIGEST.getBytes());
+            int cDataStart = Utils.lastIndexOf(inputData, cDataBytes);
+            if (digestEnd < cDataStart || cDataStart < 0) {
+                throw new SecurityException("Invalid Directory Response");
+            }
+            byte[] digest = Arrays.copyOfRange(inputData, cDataStart + cDataBytes.length, digestEnd - 5);
+            int preDigestSize = inputData.length + DIGEST_PLACEHOLDER.getBytes().length - digest.length;
+            ByteBuffer preDigest = ByteBuffer.allocate(preDigestSize);
+            preDigest.put(inputData, 0, cDataStart + cDataBytes.length);
+            preDigest.put(DIGEST_PLACEHOLDER.getBytes());
+            preDigest.put(inputData, digestEnd - 5, inputData.length);
+
+            try {
+                synchronized(signature) {
+                    signature.update(preDigest);
+                    if (!signature.verify(digest)) {
+                        throw new SecurityException("Invalid Directory Signature");
+                    }
+                }
+            } catch(Exception e) {
+                throw new SecurityException("Invalid Directory Signature");
+            }
+        }
+        
         SAXParserFactory factory = SAXParserFactory.newInstance();
         try {
             SAXParser parser = factory.newSAXParser();
-            parser.parse(in, handler);
+            parser.parse(new ByteArrayInputStream(inputData), handler);
         } catch (ParserConfigurationException e) {
             // Fatal and shouldnt happen
             throw new RuntimeException(e);

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
@@ -50,8 +51,10 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
         }
 
         // Set the ExitNodeList to use our local DirectoryServer
-        DirectoryServerManager.getInstance().setDirectoryServerUrls(
-                new String[] { "http://notARealServer/", "http://127.0.0.1:7888/" });
+        File cert = new File("");
+        DirectoryServerManager.getInstance().allowInsecure();
+        DirectoryServerManager.getInstance().setDirectoryServer(
+                new String[] { "http://notARealServer/", "http://127.0.0.1:7888/" }, cert);
 
         try { // Make sure there are no errors in registering
             serviceId = ExitNodeList.getInstance().getLocalServiceKey();

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Random;
@@ -52,8 +53,9 @@ public class SharedServicePublishingTest extends OneSwarmTestBase {
         }
 
         // Set the ExitNodeList to use our local DirectoryServer
-        DirectoryServerManager.getInstance().setDirectoryServerUrls(
-                new String[] { "http://notARealServer/", "http://127.0.0.1:7888/" });
+        DirectoryServerManager.getInstance().allowInsecure();
+        DirectoryServerManager.getInstance().setDirectoryServer(
+                new String[] { "http://notARealServer/", "http://127.0.0.1:7888/" }, new File(""));
 
         try { // Make sure there are no errors in registering
             serviceId = new Random().nextLong();

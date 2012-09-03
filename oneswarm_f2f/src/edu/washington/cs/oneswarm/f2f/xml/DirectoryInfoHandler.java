@@ -13,6 +13,7 @@ import edu.washington.cs.oneswarm.f2f.servicesharing.SharedService;
 public class DirectoryInfoHandler extends DefaultHandler {
     private PublishableService tempNode;
     private String tempVal;
+    public String digest;
     private final List<PublishableService> nodes;
 
     public DirectoryInfoHandler(List<PublishableService> list) {
@@ -26,6 +27,8 @@ public class DirectoryInfoHandler extends DefaultHandler {
             tempNode = new ExitNodeInfo();
         } else if (qName.equalsIgnoreCase(XMLHelper.SERVICE)) {
             tempNode = new SharedService(0l);
+        } else if (qName.equalsIgnoreCase(XMLHelper.DIGEST)) {
+            tempNode = null;
         }
     }
 
@@ -61,6 +64,8 @@ public class DirectoryInfoHandler extends DefaultHandler {
             }
         } else if (qName.equalsIgnoreCase(XMLHelper.SIGNATURE)) {
             // Ignored
+        } else if (qName.equalsIgnoreCase(XMLHelper.DIGEST)) {
+            this.digest = tempVal;
         }
     }
 }
