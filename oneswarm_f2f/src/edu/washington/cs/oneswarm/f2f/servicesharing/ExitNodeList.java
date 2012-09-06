@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,7 +30,8 @@ public class ExitNodeList {
     }
 
     final List<ExitNodeInfo> exitNodeList;
-    final Map<Long, ExitNodeInfo> localSharedExitServices;
+    final Map<Long, PublishableService> localSharedExitServices;
+    private ExitNodeInfo localInfo;
 
     private ExitNodeList() {
         File dbFile = new File(OSF2F_DIR, EXIT_NODE_FILE);
@@ -37,14 +39,16 @@ public class ExitNodeList {
             try {
                 ObjectInputStream obj = new ObjectInputStream(new FileInputStream(dbFile));
                 exitNodeList = (List<ExitNodeInfo>) obj.readObject();
-                localSharedExitServices = (Map<Long, ExitNodeInfo>) obj.readObject();
+                localSharedExitServices = (Map<Long, PublishableService>) obj.readObject();
+                localInfo = (ExitNodeInfo) obj.readObject();
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
         } else {
+            localInfo = new ExitNodeInfo();
             exitNodeList = new LinkedList<ExitNodeInfo>();
-            localSharedExitServices = new HashMap<Long, ExitNodeInfo>();
+            localSharedExitServices = new HashMap<Long, PublishableService>();
         }
     }
 
@@ -70,6 +74,7 @@ public class ExitNodeList {
             ObjectOutputStream obj = new ObjectOutputStream(new FileOutputStream(dbFile));
             obj.writeObject(exitNodeList);
             obj.writeObject(localSharedExitServices);
+            obj.writeObject(localInfo);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -117,7 +122,7 @@ public class ExitNodeList {
      * Returns the new key exactly as getLocalServiceKey would
      */
     public long resetLocalServiceKey() {
-        ExitNodeInfo temp = removeExitNodeSharedService(getLocalServiceKey());
+        PublishableService temp = removeExitNodeSharedService(getLocalServiceKey());
         if (temp == null) {
             temp = new ExitNodeInfo();
         }
@@ -129,12 +134,12 @@ public class ExitNodeList {
         return newKey;
     }
 
-    public void setExitNodeSharedService(ExitNodeInfo exitNode) {
+    public void setExitNodeSharedService(PublishableService exitNode) {
         localSharedExitServices.put(exitNode.serviceId, exitNode);
         sortAndSave();
     }
 
-    public ExitNodeInfo removeExitNodeSharedService(long serviceId) {
+    public PublishableService removeExitNodeSharedService(long serviceId) {
         if (isExitNodeSharedService(serviceId)) {
             return localSharedExitServices.remove(serviceId);
         }
@@ -145,16 +150,65 @@ public class ExitNodeList {
         return localSharedExitServices.containsKey(serviceId);
     }
 
-    public ExitNodeInfo getExitNodeSharedService(long serviceId) {
-        return localSharedExitServices.get(serviceId); // TODO(ben) does this
-                                                       // have a default?
+    public PublishableService getExitNodeSharedService(long serviceId) {
+        PublishableService service = localSharedExitServices.get(serviceId);
+        if (service == null && serviceId == this.getLocalServiceKey()) {
+            // First Time Shared service creation.
+            service = new ExitNodeInfo();
+            service.enabled = false;
+            service.setNickname("My Exit Node");
+            localSharedExitServices.put(serviceId, service);
+        }
+        return service;
     }
 
     public boolean allowLocalExitConnection(long serviceId, String address, int port) {
         if (isExitNodeSharedService(serviceId)) {
-            return localSharedExitServices.get(serviceId).allowsConnectionTo(address, port);
+            PublishableService exitService = getExitNodeSharedService(serviceId);
+            if (exitService instanceof ExitNodeInfo) {
+                return ((ExitNodeInfo) exitService).allowsConnectionTo(address, port);
+            }
+            return false;
         } else {
             return false;
         }
+    }
+
+    public void setServiceIsProxy(boolean b) {
+        long key = this.getLocalServiceKey();
+        if (getServiceIsProxy() != b) {
+            PublishableService current = this.getExitNodeSharedService(key);
+            ServiceSharingManager.getInstance().deregisterServerService(key);                
+            PublishableService other;
+            if (current instanceof ExitNodeInfo) {
+                other = new SharedService(key);
+                ((SharedService)other).setAddress(new InetSocketAddress(Integer.parseInt(this.localInfo.getNickname())));
+            } else {
+                other = new ExitNodeInfo();
+                ((ExitNodeInfo)other).setExitPolicy(this.localInfo.getExitPolicy().split("\n"));
+            }
+            this.removeExitNodeSharedService(key);
+            other.serviceId = key;
+            other.enabled = current.enabled;
+            other.published = current.enabled;
+            other.setNickname(current.getNickname());
+            this.setExitNodeSharedService(other);
+        }
+    }
+    
+    /**
+     * Return the exitnodeinfo associated with the locally shared service.  This is used to cache local
+     * settings like policy & local port, even when there isn't a service being actively shared.  it's
+     * just used as the model of preference data, and not instantiated as a service itself.
+     * 
+     */
+    public ExitNodeInfo getLocalInfo() {
+        return this.localInfo;
+    }
+
+    public boolean getServiceIsProxy() {
+        long key = this.getLocalServiceKey();
+        PublishableService current = this.getExitNodeSharedService(key);
+        return current instanceof ExitNodeInfo;
     }
 }

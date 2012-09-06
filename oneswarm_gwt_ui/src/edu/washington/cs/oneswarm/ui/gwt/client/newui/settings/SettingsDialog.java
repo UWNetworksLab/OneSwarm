@@ -84,9 +84,6 @@ public class SettingsDialog extends OneSwarmDialogBox {
         RemoteAccessPanel remoteAccessPanel = new RemoteAccessPanel();
         Sha1Ed2kSettingsPanel sha1HashSpeedPanel = new Sha1Ed2kSettingsPanel();
         
-        NicknamePanel nicknamePanel = new NicknamePanel();
-        ExitPolicyPanel exitPolicyPanel = new ExitPolicyPanel();
-
         // DataUsage dataUsagePanel = new DataUsage();
         CommunityServersSettingsPanel communityPanel = new CommunityServersSettingsPanel();
         KeywordFilterSettingsPanel filterPanel = new KeywordFilterSettingsPanel();
@@ -157,14 +154,10 @@ public class SettingsDialog extends OneSwarmDialogBox {
 
         mTabs.add(networkTab, msg.settings_tab_network());
         
+        NicknamePanel nicknamePanel = new NicknamePanel();
+        
         VerticalPanel exitPolicyTab = new VerticalPanel();
         exitPolicyTab.add(nicknamePanel);
-
-        DisclosurePanel exitPolicyDisclosurePanel = new DisclosurePanel(msg.settings_exitpolicy_policy_title());
-        exitPolicyDisclosurePanel.setOpen(true);
-       
-        exitPolicyDisclosurePanel.add(exitPolicyPanel);
-        exitPolicyTab.add(exitPolicyDisclosurePanel);
         
         mTabs.add(exitPolicyTab, msg.settings_exitpolicy_title());
 
@@ -201,6 +194,7 @@ public class SettingsDialog extends OneSwarmDialogBox {
         // settingsPanels.add(dataUsagePanel);
         settingsPanels.add(communityPanel);
         settingsPanels.add(filterPanel);
+        settingsPanels.add(nicknamePanel);
 
         setText(msg.settings_dialog_header());
 

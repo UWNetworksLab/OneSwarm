@@ -292,15 +292,13 @@ public interface OneSwarmUIService extends RemoteService {
 
     String activateClientService(String session, String name, long id);
 
-    void getNewServiceKey();
+    String getNewServiceKey();
 
-    void setExitNodeSharedService(String exitNodes);
+    String setExitPolicy(String exitNodes, String localPort, int mode);
 
-    List<String> getExitPolicyStrings();
+    List<String> getExitPolicy();
 
     String[] getNickname();
 
-    void setNickname(String nickname, Boolean published);
-
-    List<String> getPresetPolicy(String sender);
+    void setNickname(String nickname, Boolean published, Boolean enabled);
 }

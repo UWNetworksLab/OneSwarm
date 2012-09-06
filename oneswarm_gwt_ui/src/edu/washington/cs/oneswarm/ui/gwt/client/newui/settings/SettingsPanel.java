@@ -8,7 +8,7 @@ import edu.washington.cs.oneswarm.ui.gwt.client.i18n.OSMessages;
 public abstract class SettingsPanel extends VerticalPanel {
     protected final static OSMessages msg = OneSwarmGWT.msg;
 
-    private boolean ready_save = false;
+    protected boolean ready_save = false;
 
     public boolean isReadyToSave() {
         return ready_save;

@@ -328,15 +328,13 @@ public interface OneSwarmUIServiceAsync {
 
     void activateClientService(String session, String name, long id, AsyncCallback<String> callback);
 
-    void getNewServiceKey(AsyncCallback<Void> asyncCallback);
+    void getNewServiceKey(AsyncCallback<String> asyncCallback);
 
-    void setExitNodeSharedService(String exitNodes, AsyncCallback<Void> callback);
+    void setExitPolicy(String exitNodes, String localPort, int mode, AsyncCallback<String> callback);
 
-    void getExitPolicyStrings(AsyncCallback<List<String>> callback);
+    void getExitPolicy(AsyncCallback<List<String>> callback);
 
     void getNickname(AsyncCallback<String[]> callback);
 
-    void setNickname(String nickname, Boolean published, AsyncCallback<Void> callback);
-
-    void getPresetPolicy(String sender, AsyncCallback<List<String>> asyncCallback);
+    void setNickname(String nickname, Boolean published, Boolean enabled, AsyncCallback<Void> callback);
 }

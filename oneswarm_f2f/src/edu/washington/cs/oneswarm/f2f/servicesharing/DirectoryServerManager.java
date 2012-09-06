@@ -135,7 +135,7 @@ public class DirectoryServerManager {
             if (service instanceof SharedService) {
                 itr.remove();
                 ClientService newService = new ClientService(service.serviceId);
-                newService.setName(((SharedService) service).getName());
+                newService.setName(((SharedService) service).getNickname());
                 ServiceSharingManager.getInstance().clientServices.put(service.serviceId,
                         newService);
             } else {
@@ -151,21 +151,30 @@ public class DirectoryServerManager {
     }
 
     public void registerPublishableServices() throws IOException, SAXException {
+        boolean hasServices = false;
+        for (PublishableService n : ExitNodeList.getInstance().localSharedExitServices.values()) {
+            if (n.enabled) {
+                hasServices = true;
+            }
+        }
+        if (!hasServices) {
+            return;
+        }
+     
         HttpURLConnection conn = createConnectionTo(CHECKIN);
         XMLHelper xmlOut = new XMLHelper(conn.getOutputStream());
         // Write check-in request to the connection
-        for (ExitNodeInfo node : ExitNodeList.getInstance().localSharedExitServices.values()) {
-            if (node.getEnabled()) {
+        for (PublishableService node : ExitNodeList.getInstance().localSharedExitServices.values()) {
+            if (node.enabled) {
                 node.shortXML(xmlOut);
             }
         }
 
-        for (SharedService service : ServiceSharingManager.getInstance().sharedServices.values()) {
-            if (service.published) {
-                service.shortXML(xmlOut);
-            }
-        }
         xmlOut.close();
+        
+        if (!hasServices) {
+            return;
+        }
 
         // Retry registrations that are fixable until no fixable errors remain.
         while (true) {
@@ -209,19 +218,7 @@ public class DirectoryServerManager {
 
                 PublishableService temp = getPublishableServiceById(msg.serviceId);
 
-                if (temp instanceof ExitNodeInfo) {
-                    // This assumes a single shared service model.
-                    ExitNodeList.getInstance().resetLocalServiceKey();
-                } else if (temp instanceof SharedService) {
-                    InetSocketAddress address = ((SharedService) temp).getAddress();
-                    String name = ((SharedService) temp).getName();
-                    ServiceSharingManager.getInstance().deregisterServerService(msg.serviceId,
-                            false);
-                    long serviceId = new Random().nextLong();
-                    ServiceSharingManager.getInstance().registerSharedService(serviceId, name,
-                            address);
-                    temp = ServiceSharingManager.getInstance().sharedServices.get(serviceId);
-                }
+                ExitNodeList.getInstance().resetLocalServiceKey();
 
                 toReregister.add(temp);
                 msg.removeErrorCode(XMLHelper.ERROR_DUPLICATE_SERVICE_ID);

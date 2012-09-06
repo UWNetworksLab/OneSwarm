@@ -2,7 +2,6 @@ package edu.washington.cs.oneswarm.f2f.servicesharing;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,31 +22,12 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
     private PolicyTree exitPolicy;
     private Date onlineSince;
     private String version;
-    private boolean enabled;
     public String type;
 
     // Private data stored about this exit node
     private static final int HISTORY_LENGTH = 10; // Must be >= 3
     private final Queue<Integer> bandwidthHistory;
     private int avgBandwidth; // Stored avg of history (KB/s)
-
-    public static final LinkedList<String> EVERYTHING = new LinkedList<String>(
-            Arrays.asList("allow *:*"));
-    public static final LinkedList<String> LOCAL = new LinkedList<String>(
-            Arrays.asList("allow localhost:80"));
-    // TODO(willscott): Expand this list.
-    public static final LinkedList<String> SAFE = new LinkedList<String>(Arrays.asList(
-            "allow facebook.com:*", "allow *.facebook.com:*", "allow google.com:*",
-            "allow *.google.com:*", "allow youtube.com:*", "allow yahoo.com:*",
-            "allow baidu.com:*", "allow wikipedia.org:*", "allow *.wikipedia.org:*",
-            "allow live.com:*", "allow qq.com:*", "allow twitter.com:*", "allow amazon.com:*",
-            "allow *.blogspot.com:*", "allow taobao.com:*", "allow linkedin.com:*",
-            "allow yahoo.co.jp:*", "allow sina.com.cn:*", "allow msn.com:*", "allow yandex.ru:*",
-            "allow babylon.com:*", "allow bing.com:*",
-            "allow *.wordpress.com:*",
-            "allow ebay.com:*", // top 25 alexa.
-            "allow t.co:*", "allow bbc.co.uk:*", "allow mail.ru:*", "allow blogger.com:*",
-            "allow gmail.com:*", "allow googleusercontent.com:*"));
 
     public static final char COMMENT_CHAR = '#';
 
@@ -61,8 +41,6 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
         this.version = version;
 
         this.bandwidthHistory = new LinkedList<Integer>();
-
-        setEnabled(true);
     }
 
     /**
@@ -114,14 +92,6 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
 
     public List<String> getPolicyStrings() {
         return exitPolicy.policyStringsAsEntered;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public boolean getEnabled() {
-        return this.enabled;
     }
 
     public int getAdvertizedBandwith() {
@@ -249,7 +219,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
                 return;
             }
 
-            policyString.append(policy + ",");
+            policyString.append(policy + '\n');
             PolicyValue policyVal;
             int port;
 

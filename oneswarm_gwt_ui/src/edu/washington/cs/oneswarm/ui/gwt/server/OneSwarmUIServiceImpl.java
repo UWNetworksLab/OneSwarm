@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.util.encoders.Base64;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.StringList;
@@ -107,6 +108,7 @@ import edu.washington.cs.oneswarm.f2f.permissions.PermissionsDAO;
 import edu.washington.cs.oneswarm.f2f.servicesharing.ClientService;
 import edu.washington.cs.oneswarm.f2f.servicesharing.ExitNodeInfo;
 import edu.washington.cs.oneswarm.f2f.servicesharing.ExitNodeList;
+import edu.washington.cs.oneswarm.f2f.servicesharing.PublishableService;
 import edu.washington.cs.oneswarm.f2f.servicesharing.ServiceSharingManager;
 import edu.washington.cs.oneswarm.f2f.share.ShareManagerTools;
 import edu.washington.cs.oneswarm.ui.gwt.BackendErrorLog;
@@ -4229,64 +4231,78 @@ public class OneSwarmUIServiceImpl extends RemoteServiceServlet implements OneSw
     }
 
     @Override
-    public void getNewServiceKey() {
-        ExitNodeList.getInstance().resetLocalServiceKey();
+    public String getNewServiceKey() {
+        return "" + ExitNodeList.getInstance().resetLocalServiceKey();
     }
 
     @Override
-    public void setExitNodeSharedService(String exitNodes) {
+    public String setExitPolicy(String exitNodes, String localPort, int mode) {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        instance.getExitNodeSharedService(key).setExitPolicy(exitNodes.split("\\r?\\n"));
-    }
-
-    @Override
-    public List<String> getExitPolicyStrings() {
-        ExitNodeList instance = ExitNodeList.getInstance();
-        long key = instance.getLocalServiceKey();
-        ExitNodeInfo info = instance.getExitNodeSharedService(key);
-        if (info != null) {
-            return info.getPolicyStrings();
-        } else {
-            return new LinkedList<String>();
+        if (mode == 3) { // Local service
+            instance.getLocalInfo().setNickname(localPort);
+            instance.setServiceIsProxy(false);
+            return "";
+        } else { // Proxy.
+            try {
+                instance.getLocalInfo().setExitPolicy(exitNodes.split("\\r?\\n"));
+            } catch(Exception e) {
+                return e.getMessage();
+            }
+            instance.setServiceIsProxy(true);
+            PublishableService ps = instance.getExitNodeSharedService(key);
+            if (ps instanceof ExitNodeInfo) {
+                ((ExitNodeInfo) ps).setExitPolicy(exitNodes.split("\\r?\\n"));
+            }
+            return "";
         }
+    }
+
+    @Override
+    public List<String> getExitPolicy() {
+        //[mode, policy, port]
+        List<String> resp = new LinkedList<String>();
+
+        ExitNodeList instance = ExitNodeList.getInstance();
+        long key = instance.getLocalServiceKey();
+        resp.add(instance.getServiceIsProxy() ? "proxy" : "local");
+        
+        PublishableService info = instance.getExitNodeSharedService(key);
+        if (info != null && info instanceof ExitNodeInfo) {
+            resp.add(StringUtils.join(((ExitNodeInfo)info).getPolicyStrings(), "\n"));
+        } else {
+            resp.add("");
+        }
+        try {
+            ExitNodeInfo localStats = instance.getLocalInfo();
+            String localPort = localStats.getNickname();
+            int i = Integer.parseInt(localPort);
+            resp.add("" + i);
+        } catch (Exception e) {
+            resp.add("8080");
+        }
+        return resp;
     }
 
     @Override
     public String[] getNickname() {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        ExitNodeInfo info = instance.getExitNodeSharedService(key);
+        PublishableService info = instance.getExitNodeSharedService(key);
         if (info != null) {
-            return new String[] {info.getNickname(), info.published ? "true" : "false"};
+            return new String[] {info.getNickname(), info.published ? "true" : "false", info.enabled ? "true" : "false", "" + key};
         } else {
-            return new String[] {"", "true"};
+            return new String[] {"", "true", "false", "" + key};
         }
     }
 
     @Override
-    public void setNickname(String nickname, Boolean published) {
+    public void setNickname(String nickname, Boolean published, Boolean enabled) {
         ExitNodeList instance = ExitNodeList.getInstance();
         long key = instance.getLocalServiceKey();
-        ExitNodeInfo info = instance.getExitNodeSharedService(key);
+        PublishableService info = instance.getExitNodeSharedService(key);
+        info.enabled = enabled;
         info.setNickname(nickname);
         info.published = published;
-    }
-
-    @Override
-    public List<String> getPresetPolicy(String sender) {
-        // ExitNodeList instance = ExitNodeList.getInstance();
-        // long key = instance.getLocalServiceKey();
-        // ExitNodeInfo exit = instance.getExitNodeSharedService(key);
-        //
-        if (sender.equals("everything")) {
-            return ExitNodeInfo.EVERYTHING;
-        } else if (sender.equals("local")) {
-            return ExitNodeInfo.LOCAL;
-        } else if (sender.equals("safe")) {
-            return ExitNodeInfo.SAFE;
-        } else {
-            return getExitPolicyStrings();
-        }
     }
 }

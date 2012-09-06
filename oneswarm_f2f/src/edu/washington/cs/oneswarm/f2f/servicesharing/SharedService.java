@@ -1,5 +1,6 @@
 package edu.washington.cs.oneswarm.f2f.servicesharing;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -20,7 +21,9 @@ import edu.washington.cs.oneswarm.f2f.servicesharing.DataMessage.RawMessageEncod
 import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 import edu.washington.cs.oneswarm.ui.gwt.rpc.SharedServiceDTO;
 
-public class SharedService extends PublishableService implements Comparable<SharedService> {
+public class SharedService extends PublishableService implements Comparable<SharedService>, Serializable {
+    private static final long serialVersionUID = 5829873036975990477L;
+
     // Time the service is disabled after a failed connect attempt;
     public static final long FAILURE_BACKOFF = 60 * 1000;
     public static final String CONFIGURATION_PREFIX = "SHARED_SERVICE_";
@@ -32,7 +35,7 @@ public class SharedService extends PublishableService implements Comparable<Shar
         this.serviceId = serviceId;
     }
 
-    public String getName() {
+    public String getNickname() {
         return COConfigurationManager.getStringParameter(getNameKey());
     }
 
@@ -60,7 +63,7 @@ public class SharedService extends PublishableService implements Comparable<Shar
         return CONFIGURATION_PREFIX + serviceId + "_ip";
     }
 
-    public void setName(String name) {
+    public void setNickname(String name) {
         COConfigurationManager.setParameter(getNameKey(), name);
     }
 
@@ -71,7 +74,7 @@ public class SharedService extends PublishableService implements Comparable<Shar
 
     @Override
     public int compareTo(SharedService that) {
-        return this.getName().compareTo(that.getName());
+        return this.getNickname().compareTo(that.getNickname());
     }
 
     protected ConnectionListener getMonitoringListener(final NetworkConnection conn) {
@@ -121,22 +124,22 @@ public class SharedService extends PublishableService implements Comparable<Shar
         boolean enabled = lastFailedAge > FAILURE_BACKOFF;
         if (!enabled) {
             ServiceSharingManager.logger.finer(String.format(
-                    "Service %s is disabled, last failure: %d seconds ago", getName(),
+                    "Service %s is disabled, last failure: %d seconds ago", getNickname(),
                     lastFailedAge));
         }
-        return enabled;
+        return enabled && this.enabled;
     }
 
     public SharedServiceDTO toDTO() {
         InetSocketAddress address = getAddress();
-        return new SharedServiceDTO(getName(), Long.toHexString(serviceId), address.getAddress()
+        return new SharedServiceDTO(getNickname(), Long.toHexString(serviceId), address.getAddress()
                 .getHostAddress(), address.getPort());
     }
 
     @Override
     public String toString() {
         InetSocketAddress address = getAddress();
-        return "key=" + serviceId + " name=" + getName() + " address=" + address + " enabled="
+        return "key=" + serviceId + " name=" + getNickname() + " address=" + address + " enabled="
                 + isEnabled();
     }
 
@@ -154,7 +157,7 @@ public class SharedService extends PublishableService implements Comparable<Shar
     @Override
     public byte[] hashBase() {
         try {
-            return (serviceId + getPublicKeyString() + getName()).getBytes(XMLHelper.ENCODING);
+            return (serviceId + getPublicKeyString() + getNickname()).getBytes(XMLHelper.ENCODING);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -166,7 +169,7 @@ public class SharedService extends PublishableService implements Comparable<Shar
         xmlOut.startElement(XMLHelper.SERVICE);
         xmlOut.writeTag(XMLHelper.SERVICE_ID, Long.toString(serviceId));
         xmlOut.writeTag(XMLHelper.PUBLIC_KEY, getPublicKeyString());
-        xmlOut.writeTag(XMLHelper.NICKNAME, getName());
+        xmlOut.writeTag(XMLHelper.NICKNAME, getNickname());
         xmlOut.writeTag(XMLHelper.SIGNATURE, signature());
         xmlOut.endElement(XMLHelper.SERVICE);
     }

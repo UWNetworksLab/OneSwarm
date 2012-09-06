@@ -344,13 +344,13 @@ public class ServiceSharingManager {
                     COConfigurationManager.setParameter(SHARED_SERVICE_CONFIG_KEY, services);
                 }
                 ss = serviceClass.getConstructor(Long.class).newInstance(searchKey);
-                ss.setName(name);
+                ss.setNickname(name);
                 ss.setAddress(address);
                 logger.info("created new service: " + ss);
                 sharedServices.put(searchKey, ss);
             } else {
                 // update name and address
-                ss.setName(name);
+                ss.setNickname(name);
                 ss.setAddress(address);
             }
         } catch (Exception e) {
@@ -408,7 +408,7 @@ public class ServiceSharingManager {
                         new InetSocketAddress(InetAddress.getByName(serviceDTO.address), serviceDTO
                                 .getPort()));
             } else {
-                existing.setName(serviceDTO.getName());
+                existing.setNickname(serviceDTO.getName());
                 existing.setAddress(new InetSocketAddress(
                         InetAddress.getByName(serviceDTO.address), serviceDTO.getPort()));
                 // Remove this one from the set of services to remove

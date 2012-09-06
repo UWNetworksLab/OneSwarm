@@ -16,6 +16,7 @@ import edu.washington.cs.oneswarm.f2f.xml.XMLHelper;
 public abstract class PublishableService {
     public long serviceId = 0;
     public boolean published = true;
+    public boolean enabled = true;
 
     public static final int KEY_SIZE_BITS = 1024;
     private PublicKey publicKey;
@@ -24,6 +25,9 @@ public abstract class PublishableService {
     public PublishableService() {
         generateNewKeys();
     }
+
+    public abstract String getNickname();
+    public abstract void setNickname(String nickname);
 
     public abstract String type();
 
