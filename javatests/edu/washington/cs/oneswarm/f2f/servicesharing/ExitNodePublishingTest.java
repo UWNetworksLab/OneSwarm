@@ -112,7 +112,6 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
 
                 Request request = (req instanceof Request) ? (Request) req : HttpConnection
                         .getCurrentConnection().getRequest();
-
                 try {
 
                     XMLHelper xmlOut = new XMLHelper(resp.getOutputStream());
@@ -147,6 +146,7 @@ public class ExitNodePublishingTest extends OneSwarmTestBase {
                         xmlOut.endElement(XMLHelper.EXIT_NODE);
                         break;
                     case 3:
+                    case 4:
                         node.fullXML(xmlOut);
                         break;
                     default:

@@ -206,6 +206,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
         }
 
         public void addPolicy(String policy) {
+            policy = policy.trim();
             policyStringsAsEntered.add(policy);
             policy = policy.toLowerCase();
 
@@ -219,7 +220,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
                 return;
             }
 
-            policyString.append(policy + '\n');
+            policyString.append(policy + "\n");
             PolicyValue policyVal;
             int port;
 
@@ -294,7 +295,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
 
         @Override
         public String toString() {
-            return policyString.toString();
+            return policyString.toString().trim();
         }
 
         private enum PolicyValue {
@@ -315,7 +316,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
 
             // Constructs a domainPart node
             public PolicyNode(String domainPart) {
-                this(domainPart, -2, null);
+                this(domainPart.trim(), -2, null);
             }
 
             // Constructs a port node
@@ -324,7 +325,7 @@ public class ExitNodeInfo extends PublishableService implements Comparable<ExitN
             }
 
             private PolicyNode(String domainPart, int port, PolicyValue policy) {
-                this.domain = domainPart;
+                this.domain = domainPart.trim();
                 this.port = port;
                 this.policy = policy;
                 this.children = new LinkedList<PolicyNode>();
