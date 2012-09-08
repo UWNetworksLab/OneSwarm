@@ -1,14 +1,13 @@
 package edu.washington.cs.oneswarm.f2f.dht;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
-
-import com.google.common.collect.Lists;
 
 import edu.washington.cs.oneswarm.ui.gwt.rpc.CommunityRecord;
 import edu.washington.cs.oneswarm.ui.gwt.server.community.CHTGetOp;
@@ -84,8 +83,8 @@ public class CHTClientHTTP implements CHTClientInterface {
     }
 
     private void flushPuts() {
-        List<byte[]> keys = Lists.newArrayList();
-        List<byte[]> values = Lists.newArrayList();
+        List<byte[]> keys = new ArrayList<byte[]>();
+        List<byte[]> values = new ArrayList<byte[]>();
         while (!pendingPuts.isEmpty()) {
             PutOp op = pendingPuts.remove(0);
             if (op == null) {
@@ -101,8 +100,8 @@ public class CHTClientHTTP implements CHTClientInterface {
     }
 
     private void flushGets() {
-        List<byte[]> keys = Lists.newArrayList();
-        List<CHTCallback> callbacks = Lists.newArrayList();
+        List<byte[]> keys = new ArrayList<byte[]>();
+        List<CHTCallback> callbacks = new ArrayList<CHTCallback>();
         while (!pendingGets.isEmpty()) {
             GetOp op = pendingGets.remove(0);
             if (op == null) {

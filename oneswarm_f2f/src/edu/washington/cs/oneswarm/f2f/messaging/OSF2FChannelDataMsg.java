@@ -12,27 +12,22 @@ public class OSF2FChannelDataMsg extends OSF2FChannelMsg {
     /**
      * Channel Message Header
      * [channel id _____]
-     * [window size ____]
      * [data ________...]
      * Channel ID is the id of the channel, 1 int.
-     * Window size is the available queue size of the reverse path, 1 int.
      */
 
     public static final int CHANNEL_ID_LEN = 4;
-    public static final int WINDOW_LEN = 4;
-    public static final int BASE_LENGTH = WINDOW_LEN + CHANNEL_ID_LEN;
+    public static final int BASE_LENGTH = CHANNEL_ID_LEN;
     private String description = null;
     private final byte version;
     private final int channelID;
-    private final int windowSize;
     private final DirectByteBuffer[] buffer = new DirectByteBuffer[2];
     private int messageLength;
 
-    public OSF2FChannelDataMsg(byte _version, int channelID, int windowSize, DirectByteBuffer data) {
+    public OSF2FChannelDataMsg(byte _version, int channelID, DirectByteBuffer data) {
         super(channelID);
         this.version = _version;
         this.channelID = channelID;
-        this.windowSize = windowSize;
         this.buffer[1] = data;
         updateMessageLength();
     }
@@ -45,10 +40,6 @@ public class OSF2FChannelDataMsg extends OSF2FChannelMsg {
         }
     }
     
-    public int getWindowSize() {
-        return this.windowSize;
-    }
-
     public DirectByteBuffer getPayload() {
         return buffer[1];
     }
@@ -65,11 +56,10 @@ public class OSF2FChannelDataMsg extends OSF2FChannelMsg {
         }
 
         int channelID = data.getInt(DirectByteBuffer.SS_MSG);
-        int windowSize = data.getInt(DirectByteBuffer.SS_MSG);
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest("Deserialized: " + getDescription());
         }
-        return new OSF2FChannelDataMsg(version, channelID, windowSize, data);
+        return new OSF2FChannelDataMsg(version, channelID, data);
     }
 
     @Override
@@ -106,7 +96,7 @@ public class OSF2FChannelDataMsg extends OSF2FChannelMsg {
     public String getDescription() {
         if (description == null) {
             description = OSF2FMessage.ID_OS_CHANNEL_DATA_MSG + "\tchannel=" + channelID
-                    + "\twindow=" + windowSize + "\tbytes=";
+                     + "\tbytes=";
             if (buffer[1] != null)
                 description += buffer[1].remaining(DirectByteBuffer.SS_MSG);
         }
@@ -128,7 +118,6 @@ public class OSF2FChannelDataMsg extends OSF2FChannelMsg {
         if (buffer[0] == null) {
             buffer[0] = DirectByteBufferPool.getBuffer(DirectByteBuffer.AL_MSG, BASE_LENGTH);
             buffer[0].putInt(DirectByteBuffer.SS_MSG, channelID);
-            buffer[0].putInt(DirectByteBuffer.SS_MSG, windowSize);
             buffer[0].flip(DirectByteBuffer.SS_MSG);
         }
 

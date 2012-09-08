@@ -87,7 +87,7 @@ public class OSF2FMessageFactory {
             MessageManager.getSingleton().registerMessageType(
                     new OSF2FHashSearchResp(OSF2FMessage.CURRENT_VERSION, 0, 0, 0));
             MessageManager.getSingleton().registerMessageType(
-                    new OSF2FChannelDataMsg(OSF2FMessage.CURRENT_VERSION, 0, 0, null));
+                    new OSF2FChannelDataMsg(OSF2FMessage.CURRENT_VERSION, 0, null));
             MessageManager.getSingleton().registerMessageType(
                     new OSF2FChannelReset(OSF2FMessage.CURRENT_VERSION, 0));
 

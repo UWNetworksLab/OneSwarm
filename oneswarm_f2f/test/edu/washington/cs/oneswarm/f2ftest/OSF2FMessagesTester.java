@@ -203,7 +203,7 @@ public class OSF2FMessagesTester {
         dbuffer.flip(DirectByteBuffer.SS_NET);
 
         DirectByteBuffer[] data = OSF2FMessageFactory.createOSF2FRawMessage(
-                new OSF2FChannelDataMsg((byte) 1, 0x4949494, -1, dbuffer)).getRawData();
+                new OSF2FChannelDataMsg((byte) 1, 0x4949494, dbuffer)).getRawData();
         ByteBuffer buf = ByteBuffer.allocate(17000);
         for (int i = 0; i < data.length; i++) {
             buf.put(data[i].getBuffer(DirectByteBuffer.SS_MSG));

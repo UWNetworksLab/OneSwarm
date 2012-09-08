@@ -12,6 +12,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
      * Service Message Header:
      * [version_][control_][subchannel________]
      * [sequence number_______________________]
+     * [window size___________________________]
      * [options____________________________...]
      * [data_______________________________...]
      * Control byte holds [length*4 ack syn rst reserved]
@@ -23,20 +24,22 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
     private final int[] options;
     private final short subchannel;
     private final int sequenceNumber;
+    private final int windowSize;
     // private final byte[] options;
     private DirectByteBuffer serviceHeader;
     private static final byte VERSION_NUM = 42;
     private static final byte ss = 1;
-    // with no options: 1 word channel, 2 word header.
-    public static final int BASE_LENGTH = 12;
+    // with no options: 1 word channel, 3 word header.
+    public static final int BASE_LENGTH = 16;
 
     public OSF2FServiceDataMsg(byte _version, int channelID, int windowSize, int sequenceNumber, short subchannel,
             int[] options, DirectByteBuffer data) {
-        super(_version, channelID, windowSize, data);
+        super(_version, channelID, data);
         this.version = VERSION_NUM;
         this.subchannel = subchannel;
         this.options = options;
         this.sequenceNumber = sequenceNumber;
+        this.windowSize = windowSize;
     }
 
     private OSF2FServiceDataMsg(byte _version, int channelID, int windowSize, int sequenceNumber, short subchannel,
@@ -56,6 +59,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
             }
             data.flip(ss);
         }
+        // TODO(willscott): acks should include meaningful window size.
         OSF2FServiceDataMsg msg = new OSF2FServiceDataMsg(_version, channelID, -1, acknowledgements[0],
                 subchannel, new int[0], data, (byte) 8);
         msg.setDatagram(datagram);
@@ -83,7 +87,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
         }
 
         if (serviceHeader == null) {
-            int length = 2 + options.length;
+            int length = 3 + options.length;
             serviceHeader = DirectByteBufferPool.getBuffer(DirectByteBuffer.AL_MSG, 4 * length);
             serviceHeader.put(DirectByteBuffer.SS_MSG, version);
             byte control = this.control;
@@ -91,6 +95,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
             serviceHeader.put(DirectByteBuffer.SS_MSG, control);
             serviceHeader.putShort(DirectByteBuffer.SS_MSG, subchannel);
             serviceHeader.putInt(DirectByteBuffer.SS_MSG, sequenceNumber);
+            serviceHeader.putInt(DirectByteBuffer.SS_MSG, windowSize);
             for (int option : options) {
                 serviceHeader.putInt(DirectByteBuffer.SS_MSG, option);
             }
@@ -137,6 +142,8 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
         words--;
         int num = payload.getInt(SS_MSG);
         words--;
+        int window = payload.getInt(SS_MSG);
+        words--;
         // System.err.println(String.format(
         // "VERSION: %d, CONTROL: %d, WORDS: %d, WINDOW: %d, NUM:%d REMAINING: %d",
         // version, control, words, subchannel, num,
@@ -145,7 +152,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
         for (int i = 0; i < words; i++) {
             options[i] = payload.getInt(SS_MSG);
         }
-        return new OSF2FServiceDataMsg(version, msg.getChannelId(), msg.getWindowSize(), num, subchannel, options,
+        return new OSF2FServiceDataMsg(version, msg.getChannelId(), window, num, subchannel, options,
                 payload,
                 (byte) (control & 0x0f));
     }
@@ -165,7 +172,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
 
     @Override
     public int getMessageSize() {
-        return super.getMessageSize() + 4 * (2 + options.length);
+        return super.getMessageSize() + 4 * (3 + options.length);
     }
 
     public boolean isAck() {

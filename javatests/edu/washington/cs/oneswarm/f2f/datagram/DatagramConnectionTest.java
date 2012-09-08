@@ -37,8 +37,8 @@ public class DatagramConnectionTest extends OneSwarmTestBase {
     public static final byte SS = DirectByteBuffer.SS_MSG;
     public static final int LOTS_OF_TOKENS = 100 * 1000 * 1000;
 
-    // Leave room for 1 word channel_id + 1 word window size + 2 word service header
-    public static final int MAX_CHANNEL_MESSAGE_PAYLOAD_SIZE = MAX_DATAGRAM_PAYLOAD_SIZE - 16;
+    // Leave room for 1 word channel_id + 2 word service header
+    public static final int MAX_CHANNEL_MESSAGE_PAYLOAD_SIZE = MAX_DATAGRAM_PAYLOAD_SIZE - 12;
 
     private static class MockDatagramConnectionManager implements DatagramConnectionManager {
         DatagramSocket socket;
