@@ -10,4 +10,6 @@ public interface ServiceChannelEndpointDelegate {
     public boolean channelGotMessage(ServiceChannelEndpoint sender, OSF2FServiceDataMsg msg);
 
     public boolean writesMessages();
+    
+    public int queueCapacity(ServiceChannelEndpoint sender);
 }

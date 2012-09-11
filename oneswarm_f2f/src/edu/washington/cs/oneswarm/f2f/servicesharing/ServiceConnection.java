@@ -30,8 +30,8 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
     private static final byte ss = 97;
 
     static final String SERVICE_PRIORITY_KEY = "SERVICE_CLIENT_MULTIPLEX_QUEUE";
-    static final int SERVICE_MSG_BUFFER_SIZE = 1024 * COConfigurationManager.getIntParameter(
-            "SERVICE_CLIENT_flow", 10);
+    static final int SERVICE_MSG_BUFFER_SIZE = COConfigurationManager.getIntParameter(
+            "SERVICE_CLIENT_flow", 100);
 
     protected final int MAX_CHANNELS = COConfigurationManager.getIntParameter(
             "SERVICE_CLIENT_channels", 4);
@@ -50,7 +50,7 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
     };
 
     enum ServiceFeatures {
-        UDP, PACKET_DUPLICATION, ADAPTIVE_DUPLICATION
+        UDP, PACKET_DUPLICATION, ADAPTIVE_DUPLICATION, BACKPRESSURE
     };
 
     protected final MessageStreamMultiplexer mmt;
@@ -96,11 +96,14 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
         if (COConfigurationManager.getBooleanParameter("SERVICE_CLIENT_adaptive")) {
             features.add(ServiceFeatures.ADAPTIVE_DUPLICATION);
         }
+        if (COConfigurationManager.getBooleanParameter("SERVICE_CLIENT_backpressure")) {
+            features.add(ServiceFeatures.BACKPRESSURE);
+        }
         this.FEATURES = EnumSet.copyOf(features);
         logger.info("Service Connection active with settings: start window = "
-                + (windowSize / 1024)
-                + ", flow="
-                + (SERVICE_MSG_BUFFER_SIZE / 1024)
+                + (windowSize)
+                + ", service buffer="
+                + (SERVICE_MSG_BUFFER_SIZE)
                 + ", max="
                 + MAX_CHANNELS
                 + ", "
@@ -109,6 +112,8 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
                 + (features.contains(ServiceFeatures.PACKET_DUPLICATION) ? "Duplication"
                         : "No Duplication")
                 + ", "
+                + (features.contains(ServiceFeatures.BACKPRESSURE) ? "Backpressure"
+                        : "No Backpressure") + ", "
                 + (features.contains(ServiceFeatures.ADAPTIVE_DUPLICATION) ? "Adaptive"
                         : "Not Adapitive"));
         if (delegate != null) {
@@ -462,6 +467,11 @@ public class ServiceConnection implements ServiceChannelEndpointDelegate {
     @Override
     public boolean writesMessages() {
         return true;
+    }
+    
+    @Override
+    public int queueCapacity(ServiceChannelEndpoint sender) {
+        return -1;
     }
 
     private int getAvailableBytes() {

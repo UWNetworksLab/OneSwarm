@@ -27,6 +27,9 @@ public class DatagramRateLimitedChannelQueue extends DatagramRateLimiter {
     private int queueLength = 0;
     private final static int BASE_MAX_QUEUE_LENGTH = 2 * DatagramConnection.MAX_DATAGRAM_SIZE;
 
+    // Reciprocal of how full bucket must be to assume backpressure limitation. (10 = 90% full, 100 = 99%)
+    private final static int BACKPRESSURE_LIMITATION_THRESHOLD = 10;
+
     // Visible for testing
     int maxQueueLength = BASE_MAX_QUEUE_LENGTH;
 
@@ -52,28 +55,29 @@ public class DatagramRateLimitedChannelQueue extends DatagramRateLimiter {
     public synchronized int refillBucket(int tokens) {
         int originalTokens = availableTokens;
         availableTokens += tokens;
+        int maxTokens = backpressureLimitation >= 0 ? backpressureLimitation : maxAvailableTokens;
 
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest(toString() + ": refilling " + tokens + " tokens, available="
                     + availableTokens);
-        }
+        }        
         
         // Overflows.
         if (availableTokens < originalTokens && tokens > 0) {
             logger.finest(toString() + ": bucket overflow.");
-            int used = maxAvailableTokens - originalTokens;
-            availableTokens = maxAvailableTokens;
+            int used = maxTokens - originalTokens;
+            availableTokens = maxTokens;
             tokens = used;
         }
         // Send
         send();
 
         // Return leftovers.
-        if (availableTokens > maxAvailableTokens) {
-            int overflow = availableTokens - maxAvailableTokens;
+        if (availableTokens > maxTokens) {
+            int overflow = availableTokens - maxTokens;
             logger.finest(toString() + ": overflow by " + overflow + "tokens, before: "
-                    + availableTokens + "/" + maxAvailableTokens);
-            availableTokens = maxAvailableTokens;
+                    + availableTokens + "/" + maxTokens);
+            availableTokens = maxTokens;
             return tokens - overflow;
         }
         return tokens;
@@ -178,5 +182,10 @@ public class DatagramRateLimitedChannelQueue extends DatagramRateLimiter {
 
     public int getChannelId() {
         return channelId;
+    }
+
+    public boolean isBackpressureLimited() {
+        return this.backpressureLimitation >= 0 && this.backpressureLimitation < this.maxAvailableTokens &&
+                (this.backpressureLimitation - this.availableTokens) * BACKPRESSURE_LIMITATION_THRESHOLD < this.backpressureLimitation;
     }
 }

@@ -24,7 +24,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
     private final int[] options;
     private final short subchannel;
     private final int sequenceNumber;
-    private final int windowSize;
+    private int windowSize;
     // private final byte[] options;
     private DirectByteBuffer serviceHeader;
     private static final byte VERSION_NUM = 42;
@@ -48,7 +48,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
         this.control = control;
     }
 
-    static OSF2FServiceDataMsg acknowledge(byte _version, int channelID, short subchannel,
+    static OSF2FServiceDataMsg acknowledge(byte _version, int channelID, int windowSize, short subchannel,
             int[] acknowledgements, boolean datagram) {
         int payloadSize = acknowledgements.length - 1;
         DirectByteBuffer data = null;
@@ -60,7 +60,7 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
             data.flip(ss);
         }
         // TODO(willscott): acks should include meaningful window size.
-        OSF2FServiceDataMsg msg = new OSF2FServiceDataMsg(_version, channelID, -1, acknowledgements[0],
+        OSF2FServiceDataMsg msg = new OSF2FServiceDataMsg(_version, channelID, windowSize, acknowledgements[0],
                 subchannel, new int[0], data, (byte) 8);
         msg.setDatagram(datagram);
         return msg;
@@ -167,6 +167,18 @@ public class OSF2FServiceDataMsg extends OSF2FChannelDataMsg {
         payload.position(SS_MSG, oldPos);
         if (version != VERSION_NUM) {
             throw new MessageException("Incorrect Service Version Number.");
+        }
+    }
+    
+    public int getWindow() {
+        return this.windowSize;
+    }
+    
+    public void setWindow(int window) {
+        this.windowSize = window;
+        if (serviceHeader != null) {
+            serviceHeader.returnToPool();
+            serviceHeader = null;
         }
     }
 

@@ -12,6 +12,7 @@ public class DatagramRateLimiter {
     protected volatile int availableTokens = 0;
 
     protected int maxAvailableTokens = 2 * DatagramConnection.MAX_DATAGRAM_SIZE;
+    protected int backpressureLimitation = -1;
 
     protected final ArrayList<DatagramRateLimiter> queues = new ArrayList<DatagramRateLimiter>();
     private final Comparator<DatagramRateLimiter> comparator = new Comparator<DatagramRateLimiter>() {
@@ -30,7 +31,11 @@ public class DatagramRateLimiter {
      * @return The number of tokens actually added.
      */
     public int refillBucket(int tokens) {
-        int toRefill = Math.min(tokens, maxAvailableTokens - availableTokens);
+        int remaining = maxAvailableTokens - availableTokens;
+        if (this.backpressureLimitation >= 0) {
+            remaining = backpressureLimitation - availableTokens;
+        }
+        int toRefill = Math.min(tokens, remaining);
         availableTokens += toRefill;
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest(toString() + ": " + toRefill + " tokens added, available: "
@@ -98,6 +103,13 @@ public class DatagramRateLimiter {
 
     public void setTokenBucketSize(int tokens) {
         this.maxAvailableTokens = tokens;
+        if (maxAvailableTokens <= backpressureLimitation) {
+          backpressureLimitation = maxAvailableTokens;
+        }
+    }
+    
+    public void setBackpressureLimitation(int tokens) {
+        this.backpressureLimitation = Math.min(this.maxAvailableTokens, tokens);
     }
 
     @Override

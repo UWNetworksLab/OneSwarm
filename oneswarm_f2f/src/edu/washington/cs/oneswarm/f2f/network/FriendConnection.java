@@ -743,9 +743,9 @@ public class FriendConnection implements DatagramListener {
         return remoteFriendKeyHash;
     }
 
-    public int getSendQueueCurrentCapacity(int channelId) {
+    public int getSendQueueCurrentCapacity(int channelId, boolean excludeFeedback) {
         if (udpConnection != null && udpConnection.isSendingActive()) {
-            return udpConnection.getCapacityForChannel(channelId);
+            return udpConnection.getCapacityForChannel(channelId, excludeFeedback);
         } else if (this.overlayTransports.size() > 0) {
             return (FriendConnectionQueue.MAX_FRIEND_QUEUE_LENGTH - friendConnectionQueue
                     .getForwardQueueBytes()) / this.overlayTransports.size();
@@ -761,6 +761,12 @@ public class FriendConnection implements DatagramListener {
             return (FriendConnectionQueue.MAX_FRIEND_QUEUE_LENGTH) / this.overlayTransports.size();
         } else {
             return 0;
+        }
+    }
+
+    public void updateBackpressure(int win) {
+        if (udpConnection != null && udpConnection.isSendingActive()) {
+            udpConnection.setBackpressureLimitation(win);
         }
     }
 
@@ -785,7 +791,7 @@ public class FriendConnection implements DatagramListener {
                 // this is a message we should forward
                 OverlayForward f = overlayForwards.get(channelId);
                 msg.setForward(true);
-                f.forwardMessage(msg);
+                f.forwardMessage(msg, this);
             } else {
                 if (!recentlyClosedChannels.containsKey(msg.getChannelId())) {
                     logger.warning(getDescription()
@@ -839,6 +845,8 @@ public class FriendConnection implements DatagramListener {
     }
 
     private final static int MAX_FILE_LIST_REQUESTS = 10;
+
+    public static final boolean BACKPRESSURE = COConfigurationManager.getBooleanParameter("SERVICE_CLIENT_backpressure");
 
     private int numFileListRequestsReceived = 0;
 
@@ -1049,7 +1057,7 @@ public class FriendConnection implements DatagramListener {
                 metaInfoRequestHandler.handleMetaInfoRequest(req);
             } else if (overlayForwards.containsKey(channelId)) {
                 // we have this path registered, sent it to the other end
-                overlayForwards.get(channelId).forwardMessage(req);
+                overlayForwards.get(channelId).forwardMessage(req, this);
             } else {
                 Debug.out("got meta info request message " + "with unknown channel Id: "
                         + req.getDescription());
@@ -1071,7 +1079,7 @@ public class FriendConnection implements DatagramListener {
             } else if (metaInfoRequestHandler.handleMetaInfoResponse(resp)) {
                 // we sent this, all is good.
             } else if (overlayForwards.containsKey(channelId)) {
-                overlayForwards.get(channelId).forwardMessage(resp);
+                overlayForwards.get(channelId).forwardMessage(resp, this);
             } else {
                 Debug.out("got meta info resp message " + "with unknown channel Id: "
                         + resp.getDescription());
@@ -2305,7 +2313,7 @@ public class FriendConnection implements DatagramListener {
             deregisterOverlayForward(channelId, true);
         }
 
-        public void forwardMessage(OSF2FChannelMsg message) {
+        public void forwardMessage(OSF2FChannelMsg message, FriendConnection sender) {
             logger.finest("Packet to be forwarded: " + message.getDescription() + " forwarded="
                     + bytesForwarded);
             message.setByteInChannel(bytesForwarded);
@@ -2324,6 +2332,12 @@ public class FriendConnection implements DatagramListener {
             if (setupPacketListener != null && bytesForwarded == 0) {
                 setupPacketListener.packetAddedToForwardQueue(FriendConnection.this, conn,
                         sourceMessage, setupMessage, searcherSide, message);
+            }
+            // Flow control.
+            if (service && BACKPRESSURE) {
+                int win = ((OSF2FServiceDataMsg)message).getWindow();
+                ((OSF2FServiceDataMsg)message).setWindow(sender.getSendQueueCurrentCapacity(channelId, true));
+                sender.updateBackpressure(win);
             }
             lastMsgTime = System.currentTimeMillis();
             int numBytes = message.getMessageSize();
@@ -2350,7 +2364,7 @@ public class FriendConnection implements DatagramListener {
         }
         
         public int getQueueAvailable() {
-            return conn.getSendQueueCurrentCapacity(channelId);
+            return conn.getSendQueueCurrentCapacity(channelId, false);
         }
 
         public int getChannelId() {

@@ -192,16 +192,26 @@ public class DatagramConnection extends DatagramRateLimiter {
         return initMessage;
     }
 
-    public int getCapacityForChannel(int channelId) {
+    public int getCapacityForChannel(int channelId, boolean excludeFeedback) {
         DatagramRateLimitedChannelQueue queue = this.queueMap.get(new Integer(channelId));
         if (queue != null) {
             int tokens = queue.getAvailableTokens();
+            if (excludeFeedback && queue.isBackpressureLimited()) {
+                tokens = queue.getTokenBucketSize();
+            }
             if (tokens < MAX_DATAGRAM_PAYLOAD_SIZE) {
                 return 0;
             }
             return tokens;
         } else {
             return MAX_DATAGRAM_PAYLOAD_SIZE * INITIAL_QUEUE_CAPACITY;
+        }
+    }
+    
+    public void limitCapacityForChannel(int channelId, int capacity) {
+        DatagramRateLimitedChannelQueue queue = this.queueMap.get(new Integer(channelId));
+        if (queue != null) {
+            queue.setBackpressureLimitation(capacity);
         }
     }
 

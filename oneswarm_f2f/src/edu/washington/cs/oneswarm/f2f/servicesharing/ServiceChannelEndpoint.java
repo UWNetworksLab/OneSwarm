@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.util.DirectByteBuffer;
 import org.gudy.azureus2.core3.util.ReferenceCountedDirectByteBuffer;
 
@@ -40,6 +41,8 @@ public class ServiceChannelEndpoint extends OverlayEndpoint {
     // How long (in # RTT) before packet retransmission.
     private static final double RETRANSMISSION_MIN = 2;
     private static final double RETRANSMISSION_MAX = 3;
+
+    private static final boolean BACKPRESSURE = COConfigurationManager.getBooleanParameter("SERVICE_CLIENT_backpressure");
 
     public static final int MAX_SERVICE_MESSAGE_SIZE = 1024;
 
@@ -109,7 +112,7 @@ public class ServiceChannelEndpoint extends OverlayEndpoint {
     }
 
     public int getWriteCapacity(ServiceChannelEndpointDelegate d) {
-        int networkCapacity = friendConnection.getSendQueueCurrentCapacity(this.channelId);
+        int networkCapacity = friendConnection.getSendQueueCurrentCapacity(this.channelId, false);
         synchronized(this.delegates) {
             int fullPackets = networkCapacity / (this.delegates.size() * MAX_SERVICE_MESSAGE_SIZE);
 
@@ -179,12 +182,8 @@ public class ServiceChannelEndpoint extends OverlayEndpoint {
         }
         OSF2FServiceDataMsg newMessage = (OSF2FServiceDataMsg) msg;
         // logger.fine("Received msg with sequence number " +
-        if (!newMessage.isAck() && !newMessage.isRst()) {
-            logger.finest("ack enqueued for " + newMessage.getDescription());
-            super.writeMessage(OSF2FServiceDataMsg.acknowledge(OSF2FMessage.CURRENT_VERSION,
-                    channelId, newMessage.getSubchannel(),
-                    new int[] { newMessage.getSequenceNumber() }, newMessage.isDatagram()));
-        }
+        
+        this.friendConnection.updateBackpressure(newMessage.getWindow());
 
         ArrayList<ServiceChannelEndpointDelegate> delegateCache;
         synchronized(this.delegates) {
@@ -193,10 +192,19 @@ public class ServiceChannelEndpoint extends OverlayEndpoint {
               delegateCache.add(d);
           }
         }
+        int window = 0;
         for (ServiceChannelEndpointDelegate d : delegateCache) {
             if (d.channelGotMessage(this, newMessage)) {
+                window = d.queueCapacity(this);
                 break;
             }
+        }
+
+        if (!newMessage.isAck() && !newMessage.isRst()) {
+            logger.finest("ack enqueued for " + newMessage.getDescription());
+            super.writeMessage(OSF2FServiceDataMsg.acknowledge(OSF2FMessage.CURRENT_VERSION,
+                    channelId, window, newMessage.getSubchannel(),
+                    new int[] { newMessage.getSequenceNumber() }, newMessage.isDatagram()));
         }
     }
     

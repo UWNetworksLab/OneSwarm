@@ -689,6 +689,7 @@ public class ConfigurationDefaults {
         def.put("SERVICE_CLIENT_udp", TRUE);
         def.put("SERVICE_CLIENT_duplication", TRUE);
         def.put("SERVICE_CLIENT_adaptive", TRUE);
+        def.put("SERVICE_CLIENT_backpressure", TRUE);
     }
 
     protected ConfigurationDefaults(Map _def) {

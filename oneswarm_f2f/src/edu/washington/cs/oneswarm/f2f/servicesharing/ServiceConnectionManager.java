@@ -234,4 +234,9 @@ public class ServiceConnectionManager implements ServiceChannelEndpointDelegate 
         return false;
     }
 
+    @Override
+    public int queueCapacity(ServiceChannelEndpoint sender) {
+        return sender.getPotentialWriteCapacity();
+    }
+
 }
