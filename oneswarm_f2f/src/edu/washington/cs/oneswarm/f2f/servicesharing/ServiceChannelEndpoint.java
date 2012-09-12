@@ -271,6 +271,9 @@ public class ServiceChannelEndpoint extends OverlayEndpoint {
             logger.warning("Skipping over-aggresive retransmission of " + num.toString());
             return;
         }
+        if (msg.attempt > 0) {
+            ServiceStatsManager.getInstance().onRetransmit();
+        }
 
         // Outgoing msg will be freed by super.writeMessage.
         msg.msg.incrementReferenceCount();
