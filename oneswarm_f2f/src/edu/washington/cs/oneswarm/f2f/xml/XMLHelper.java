@@ -20,8 +20,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.google.common.annotations.VisibleForTesting;
-
 @SuppressWarnings("deprecation")
 public class XMLHelper {
 
@@ -114,7 +112,6 @@ public class XMLHelper {
         handler.endDocument();
     }
 
-    @VisibleForTesting
     public static boolean validateDigest = true;
     
     public static void parse(InputStream in, DefaultHandler handler, Signature signature) throws SAXException,
