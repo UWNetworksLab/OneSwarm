@@ -42,7 +42,7 @@ public class ServiceChannelEndpoint extends OverlayEndpoint {
     private static final double RETRANSMISSION_MIN = 2;
     private static final double RETRANSMISSION_MAX = 3;
 
-    private static final boolean BACKPRESSURE = COConfigurationManager.getBooleanParameter("SERVICE_CLIENT_backpressure");
+    private final boolean BACKPRESSURE = COConfigurationManager.getBooleanParameter("SERVICE_CLIENT_backpressure");
 
     public static final int MAX_SERVICE_MESSAGE_SIZE = 1024;
 

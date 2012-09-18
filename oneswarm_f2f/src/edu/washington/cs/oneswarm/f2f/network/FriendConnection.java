@@ -846,7 +846,7 @@ public class FriendConnection implements DatagramListener {
 
     private final static int MAX_FILE_LIST_REQUESTS = 10;
 
-    public static final boolean BACKPRESSURE = COConfigurationManager.getBooleanParameter("SERVICE_CLIENT_backpressure");
+    public final boolean BACKPRESSURE = COConfigurationManager.getBooleanParameter("SERVICE_CLIENT_backpressure");
 
     private int numFileListRequestsReceived = 0;
 
